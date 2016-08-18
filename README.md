@@ -1,5 +1,10 @@
 # README
 
+## Dependencies 
+* ant
+* sbt
+
+## Instruction
 After clone the repository, before running sbt, first run 
 
 ```
