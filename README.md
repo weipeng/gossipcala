@@ -1,4 +1,4 @@
-# Summary
+# README
 
 After clone the repository, before running sbt, first run 
 
