@@ -1,8 +1,8 @@
 # README
 
 ## Dependencies 
-* **ant**
-* **sbt**
+* **Ant**
+* **SBT**
 * **Scala 2.11.8**
 
 ## Instruction
