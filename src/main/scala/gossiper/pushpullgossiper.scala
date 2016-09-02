@@ -3,65 +3,66 @@ package gossiper
 import breeze.linalg._
 import breeze.numerics._
 import breeze.math._
-import akka.actor.{Actor,Props,ActorRef}
+import akka.actor.{Actor, Props, ActorRef}
 import scala.util.Random
 import scala.collection.mutable.Map
 import message._
 
 
-class PushPullGossiper(override val name: String, var inData: Double) 
-    extends SingleMeanGossiper(name, inData) {
+class PushPullGossiper(override val name: String, var inData: Double)
+  extends SingleMeanGossiper(name, inData) {
 
-    val rnd = new Random 
-    override def receive: Receive = {
-        case InitMessage(_neighbors) => 
-            this.setNeighbors(_neighbors)
+  val rnd = new Random
 
-        case PushMessage(_data) =>
-            val msg = makePullMessage
-            sender ! msg
-            this.update(_data)
-            this.compareData
-            if (this.toStop)
-                self ! StopMessage
-            this.gossip
+  override def receive: Receive = {
+    case InitMessage(_neighbors) =>
+      this.setNeighbors(_neighbors)
 
-        case PullMessage(_data) =>
-            this.update(_data) 
+    case PushMessage(_data) =>
+      val msg = makePullMessage
+      sender ! msg
+      update(_data)
+      compareData
+      if (toStop)
+        self ! StopMessage
+      gossip()
 
-        case StopMessage =>
-            this.wrap
+    case PullMessage(_data) =>
+      update(_data)
 
-        case StartMessage =>
-            this.gossip
+    case StopMessage =>
+      wrap()
 
-        case KillMessage =>
-            context.stop(self)
+    case StartMessage =>
+      gossip()
 
-        case AskStateAndEstimateMessage =>
-            sender ! Tuple2[Boolean, Double](toStop, getEstimate)        
-    
-        case _ =>
-            println("what the heck")
-    }
+    case KillMessage =>
+      context.stop(self)
 
-    override def gossip() {
-        val nbs = neighbors.values.toArray
-        val neighbor = nbs(rnd.nextInt(neighbors.size))
-        val msg = makePushMessage
-        neighbor ! msg
-    }
+    case AskStateAndEstimateMessage =>
+      sender !(toStop, getEstimate())
 
-    def update(data: Double) {
-        this.data(1) = (this.data(1) + data) / 2.0
-    }
+    case msg =>
+      println(s"Unexpected message $msg received")
+  }
 
-    def makePushMessage = {
-        PushMessage(data(1))
-    }
+  override def gossip() {
+    val nbs = neighbors.values.toArray
+    val neighbor = nbs(rnd.nextInt(neighbors.size))
+    val msg = makePushMessage
+    neighbor ! msg
+  }
 
-    def makePullMessage = {
-        PullMessage(data(1))
-    }
+  def update(data: Double) {
+    this.data(1) = (this.data(1) + data) / 2.0
+  }
+
+  private def makePushMessage = {
+    PushMessage(data(1))
+  }
+
+  private def makePullMessage = {
+    PullMessage(data(1))
+  }
 
 }

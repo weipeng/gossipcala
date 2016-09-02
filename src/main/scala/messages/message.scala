@@ -1,15 +1,15 @@
 package message
 
-import akka.actor.{Actor, ActorRef}
-import scala.collection.immutable.Map
+import akka.actor.ActorRef
 import breeze.linalg.DenseVector
 
+import scala.collection.immutable.Map
 
-case class PushMessage(val data: Double) 
-case class PullMessage(val data: Double)
-case class WeightedPushMessage(val data: DenseVector[Double], val round: Int)
+case class PushMessage(data: Double)
+case class PullMessage(data: Double)
+case class WeightedPushMessage(data: DenseVector[Double], round: Int)
 
-case class InitMessage(val neighbors: Map[String, ActorRef])
+case class InitMessage(neighbors: Map[String, ActorRef])
 case object StartMessage
 case object StopMessage
 case object AskStateAndEstimateMessage
