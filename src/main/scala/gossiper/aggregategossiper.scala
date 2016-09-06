@@ -1,6 +1,6 @@
 package gossiper
 
-import akka.actor.{Actor, ActorRef}
+import akka.actor.ActorRef
 import breeze.linalg.DenseVector
 import breeze.math._
 import breeze.numerics._
