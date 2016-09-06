@@ -7,7 +7,7 @@ import breeze.numerics._
 import scala.collection.immutable.Map
 
 
-class SingleMeanGossiper(val name: String, var inputData: Double) extends Actor {
+class SingleMeanGossiper(inputData: Double) {
 
   var neighbors: Map[String, ActorRef] = Map.empty
   var data: DenseVector[Double] = DenseVector(1.0, inputData)

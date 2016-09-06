@@ -1,12 +1,13 @@
 package gossiper
 
+import akka.actor.Actor
 import message._
 
 import scala.util.Random
 
 
-class PushPullGossiper(override val name: String, var inData: Double)
-  extends SingleMeanGossiper(name, inData) {
+class PushPullGossiper(val name: String, inData: Double)
+  extends SingleMeanGossiper(inData) with Actor {
 
   val rnd = new Random
 

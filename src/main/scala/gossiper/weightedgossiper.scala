@@ -1,6 +1,6 @@
 package gossiper
 
-import akka.actor.ActorRef
+import akka.actor.{Actor, ActorRef}
 import scala.collection.immutable.HashMap
 import scala.collection.mutable.ListBuffer
 import breeze.linalg.DenseVector
@@ -8,8 +8,8 @@ import message._
 import scala.language.postfixOps
 
 
-class WeightedGossiper(override val name: String, var inData: Double) extends
-  SingleMeanGossiper(name, inData) {
+class WeightedGossiper(val name: String, inData: Double)
+  extends SingleMeanGossiper(inData) with Actor {
 
   var diffuseMat: Map[ActorRef, Double] = Map()
   var mailbox: ListBuffer[DenseVector[Double]] = new ListBuffer()
