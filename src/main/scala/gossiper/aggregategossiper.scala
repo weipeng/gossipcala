@@ -1,6 +1,6 @@
 package gossiper
 
-import akka.actor.{Actor, Props, ActorRef}
+import akka.actor.{Actor, ActorRef}
 import breeze.linalg.DenseVector
 import breeze.math._
 import breeze.numerics._
@@ -44,8 +44,4 @@ class SingleMeanGossiper(inputData: Double) {
   def update() {}
 
   def gossip() {}
-
-  override def receive: Receive = {
-    case any => println(any)
-  }
 }
