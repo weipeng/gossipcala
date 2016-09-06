@@ -1,12 +1,8 @@
 package gossiper
 
-import breeze.linalg._
-import breeze.numerics._
-import breeze.math._
-import akka.actor.{Actor, Props, ActorRef}
-import scala.util.Random
-import scala.collection.mutable.Map
 import message._
+
+import scala.util.Random
 
 
 class PushPullGossiper(override val name: String, var inData: Double)
@@ -15,20 +11,22 @@ class PushPullGossiper(override val name: String, var inData: Double)
   val rnd = new Random
 
   override def receive: Receive = {
-    case InitMessage(_neighbors) =>
-      this.setNeighbors(_neighbors)
+    case InitMessage(nbs) =>
+      neighbors = nbs
+      rounds += 1
 
-    case PushMessage(_data) =>
-      val msg = makePullMessage
-      sender ! msg
-      update(_data)
-      compareData
-      if (toStop)
+    case PushMessage(d) =>
+      sender ! makePullMessage()
+      update(d)
+
+    case PullMessage(d) =>
+      update(d)
+      compareData()
+      if (toStop) {
         self ! StopMessage
-      gossip()
-
-    case PullMessage(_data) =>
-      update(_data)
+      } else {
+        gossip()
+      }
 
     case StopMessage =>
       wrap()
@@ -39,8 +37,8 @@ class PushPullGossiper(override val name: String, var inData: Double)
     case KillMessage =>
       context.stop(self)
 
-    case AskStateAndEstimateMessage =>
-      sender !(toStop, getEstimate())
+    case CheckState =>
+      sender ! NodeState(status, rounds, getEstimate())
 
     case msg =>
       println(s"Unexpected message $msg received")
@@ -49,20 +47,16 @@ class PushPullGossiper(override val name: String, var inData: Double)
   override def gossip() {
     val nbs = neighbors.values.toArray
     val neighbor = nbs(rnd.nextInt(neighbors.size))
-    val msg = makePushMessage
-    neighbor ! msg
+    neighbor ! makePushMessage()
+    rounds += 1
   }
 
-  def update(data: Double) {
-    this.data(1) = (this.data(1) + data) / 2.0
+  def update(d: Double) {
+    data(1) = (data(1) + d) / 2.0
   }
 
-  private def makePushMessage = {
-    PushMessage(data(1))
-  }
+  private def makePushMessage() = PushMessage(data(1))
 
-  private def makePullMessage = {
-    PullMessage(data(1))
-  }
+  private def makePullMessage() = PullMessage(data(1))
 
 }

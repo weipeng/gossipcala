@@ -9,29 +9,29 @@ import scala.collection.immutable.Map
 
 class SingleMeanGossiper(val name: String, var inputData: Double) extends Actor {
 
-  var neighbors = Map[String, ActorRef]()
-  var data = DenseVector[Double](1.0, inputData)
+  var neighbors: Map[String, ActorRef] = Map.empty
+  var data: DenseVector[Double] = DenseVector(1.0, inputData)
   var oldMetric: Double = 0.0
-  var convergence_counter = 0
+  var convergence_counter: Int = 0
 
-  val errorBound = 0.001
-  val stoppingTimes = 15
-  var estimate = 0.0
-  var status = "active"
+  val errorBound: Double = 0.001
+  val stoppingTimes: Int = 15
+  var estimate: Double = 0.0
+  var status: NodeStatus.Value = NodeStatus.ACTIVE
 
-  var rounds = 0
+  var rounds: Int = 0
   var messages = 0
 
   def wrap() {
     estimate = getEstimate()
-    status = "finished"
+    status = NodeStatus.COMPLETE
   }
 
   def toStop: Boolean = convergence_counter >= stoppingTimes
 
   def getEstimate(): Double = data(1) / data(0)
 
-  def compareData {
+  protected def compareData(): Unit = {
     val tmpData = getEstimate()
     if (abs(tmpData / oldMetric - 1) < errorBound) {
       convergence_counter += 1
@@ -39,10 +39,6 @@ class SingleMeanGossiper(val name: String, var inputData: Double) extends Actor 
       convergence_counter = 0
     }
     oldMetric = tmpData
-  }
-
-  def setNeighbors(nbs: Map[String, ActorRef]) {
-    neighbors = nbs
   }
 
   def update() {}

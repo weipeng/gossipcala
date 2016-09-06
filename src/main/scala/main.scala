@@ -44,24 +44,23 @@ object Simulation {
       Thread.sleep(200)
 
       val futures = members map { m =>
-        (m ? AskStateAndEstimateMessage).mapTo[(Boolean, Double)]
+        (m ? CheckState).mapTo[NodeState]
       }
       val futureList = Future.sequence(futures)
       futureList map { x =>
-        flag = x.forall(_._1)
+        flag = x.forall(_.status == NodeStatus.COMPLETE)
       }
 
-      futureList map { x => println(x + "AAAAAAAAAAAAAAAAAAH " + flag) }
       futureList map { x =>
+        println(x + "AAAAAAAAAAAAAAAAAAH " + flag)
         for ((m, i) <- members.zipWithIndex) {
-          println(m.path.name + " " + abs(x(i)._2 / (dataSum / 3) - 1))
+          println(m.path.name + " " + abs(x(i).estimate / (dataSum / 3) - 1))
         }
+        println("Average " + dataSum / 3)
       }
-      println("Average " + dataSum / 3)
 
       if (flag)
         system.terminate
-
     }
   }
 }
