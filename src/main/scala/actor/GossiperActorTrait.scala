@@ -1,7 +1,7 @@
 package actor
 
-import akka.actor.{ActorRef, Actor}
-import gossiper.{SingleMeanGossiper, AggregateGossiper}
+import akka.actor.{Actor, ActorRef}
+import gossiper.AggregateGossiper
 
 import scala.collection.immutable.Map
 

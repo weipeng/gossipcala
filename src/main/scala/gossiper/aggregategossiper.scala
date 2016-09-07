@@ -4,9 +4,9 @@ import breeze.linalg.DenseVector
 
 trait AggregateGossiper[T] {
   val data: DenseVector[T]
-  val status: GossiperStatus.Value = GossiperStatus.ACTIVE
-  val roundCount: Int = 0
-  val messageCount: Int = 0
+  val status: GossiperStatus.Value
+  val roundCount: Int
+  val messageCount: Int
   def wrap(): AggregateGossiper[T]
   def toStop(): Boolean
   def estimate(): T
