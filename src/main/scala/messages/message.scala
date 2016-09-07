@@ -2,7 +2,7 @@ package message
 
 import akka.actor.ActorRef
 import breeze.linalg.DenseVector
-import gossiper.NodeStatus
+import gossiper.GossiperStatus
 
 import scala.collection.immutable.Map
 
@@ -15,7 +15,7 @@ case object StartMessage
 case object StopMessage
 
 case object CheckState
-case class NodeState(status: NodeStatus.Value, round: Int, estimate: Double)
+case class NodeState(status: GossiperStatus.Value, round: Int, estimate: Double)
 
 case object KillMessage
 

@@ -1,6 +1,6 @@
 package gossiper
 
-object NodeStatus extends Enumeration {
+object GossiperStatus extends Enumeration {
   val ACTIVE,
   COMPLETE = Value
 }

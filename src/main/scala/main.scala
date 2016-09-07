@@ -1,14 +1,16 @@
-import akka.actor.{Actor, ActorSystem, Props, ActorRef}
+import actor.PushPullGossiper
+import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
-import scala.concurrent.Future
-import scala.concurrent.duration._
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.immutable.Map
-import scala.language.postfixOps
 import gossiper._
 import message._
+
+import scala.collection.immutable.Map
+import scala.collection.mutable.ArrayBuffer
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+import scala.concurrent.duration._
+import scala.language.postfixOps
 import scala.math.abs
 
 
@@ -28,7 +30,7 @@ object Simulation {
     val dataSum = data.sum
     (0 until numNodes).foreach { i =>
       members.append(
-        system.actorOf(Props(new PushPullGossiper(s"node$i", data(i))), name = "node" + i)
+        system.actorOf(Props(new PushPullGossiper(s"node$i", SingleMeanGossiper(data(i)))), name = "node" + i)
       )
     }
 
@@ -48,7 +50,7 @@ object Simulation {
       }
       val futureList = Future.sequence(futures)
       futureList map { x =>
-        flag = x.forall(_.status == NodeStatus.COMPLETE)
+        flag = x.forall(_.status == GossiperStatus.COMPLETE)
       }
 
       futureList map { x =>
