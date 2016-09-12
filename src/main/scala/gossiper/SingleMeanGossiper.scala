@@ -8,13 +8,13 @@ case class SingleMeanGossiper private(override val data: DenseVector[Double],
                                       override val status: GossiperStatus.Value,
                                       override val roundCount: Int = 0,
                                       override val messageCount: Int = 0,
+                                      override val wastedRoundCount: Int = 0,
                                       convergenceCount: Int = 0,
                                       lastMetric: Double = 0.0) extends AggregateGossiper[Double] {
 
   private val stoppingThreshold: Int = 15
-  private val errorBound: Float = 0.001
-  private val wastedRndCount: Int = 0
-  private val wastedRndThreshold: Float = 0.00001
+  private val errorBound: Double = 0.001
+  private val wastedRoundThreshold: Double = 0.00001
 
   override def wrap(): SingleMeanGossiper = copy(status = GossiperStatus.COMPLETE)
 
@@ -33,7 +33,7 @@ case class SingleMeanGossiper private(override val data: DenseVector[Double],
 
   override def update(value: Double): SingleMeanGossiper = {
     if (abs(data(1) - value) <= wastedRoundThreshold) {
-        copy(wastedRoundCount = wastedRndCount + 1)
+        copy(wastedRoundCount = wastedRoundCount + 1)
     }   
     data(1) = (data(1) + value) / 2.0
     this

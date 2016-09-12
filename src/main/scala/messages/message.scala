@@ -18,5 +18,3 @@ case object CheckState
 case class NodeState(status: GossiperStatus.Value, round: Int, estimate: Double)
 
 case object KillMessage
-
-case object PushSignal

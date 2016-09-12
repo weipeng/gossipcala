@@ -14,7 +14,7 @@ class PushPullGossiper(override val name: String,
 
   override def work(neighbors: Map[String, ActorRef], gossiper: SingleMeanGossiper): Receive = {
     case InitMessage(neighbors) =>
-      context become work(nbs, gossiper.bumpRound())
+      context become work(neighbors, gossiper.bumpRound())
 
     case PushMessage(value) =>
       sender ! makePullMessage()

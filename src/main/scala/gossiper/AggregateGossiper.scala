@@ -6,6 +6,7 @@ trait AggregateGossiper[T] {
   val data: DenseVector[T]
   val status: GossiperStatus.Value
   val roundCount: Int
+  val wastedRoundCount: Int
   val messageCount: Int
   def wrap(): AggregateGossiper[T]
   def toStop(): Boolean
