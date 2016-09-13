@@ -1,7 +1,7 @@
 import gzip
 import networkx as nx
 from networkx.readwrite import json_graph
-from cjson import encode 
+from ujson import dumps
 
 for graph_type in ['sf', 'sw']:
     for num_nodes in xrange(200, 1001, 200):
@@ -13,7 +13,7 @@ for graph_type in ['sf', 'sw']:
                         if nx.is_connected(G):
                             break    
                     data = json_graph.node_link_data(G)
-                    jdata = encode(data)
+                    jdata = dumps(data)
                     with gzip.open('../graphs/sf_%d_%d_%d.data.gz'% (num_nodes, p, i), 'wb') as f:
                         f.write(jdata)
 
@@ -25,6 +25,6 @@ for graph_type in ['sf', 'sw']:
                         if nx.is_connected(G):
                             break
                     data = json_graph.node_link_data(G)
-                    jdata = encode(data)
+                    jdata = dumps(data)
                     with gzip.open('../graphs/sf_%d_%d_%d.data.gz'% (num_nodes, p, i), 'wb') as f:
                         f.write(jdata)
