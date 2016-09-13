@@ -12,7 +12,7 @@ for graph_type in ['sf', 'sw']:
                         G = nx.barabasi_albert_graph(num_nodes, p)
                         if nx.is_connected(G):
                             break    
-                    data = json_graph.adjacency_data(G)
+                    data = json_graph.node_link_data(G)
                     jdata = encode(data)
                     with gzip.open('../graphs/sf_%d_%d_%d.data.gz'% (num_nodes, p, i), 'wb') as f:
                         f.write(jdata)
@@ -24,7 +24,7 @@ for graph_type in ['sf', 'sw']:
                         G = nx.watts_strogatz_graph(num_nodes, p, .4)
                         if nx.is_connected(G):
                             break
-                    data = json_graph.adjacency_data(G)
+                    data = json_graph.node_link_data(G)
                     jdata = encode(data)
                     with gzip.open('../graphs/sf_%d_%d_%d.data.gz'% (num_nodes, p, i), 'wb') as f:
                         f.write(jdata)
