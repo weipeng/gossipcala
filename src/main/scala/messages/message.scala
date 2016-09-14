@@ -10,6 +10,8 @@ case class PushMessage(data: Double)
 case class PullMessage(data: Double)
 case class WeightedPushMessage(data: DenseVector[Double], round: Int)
 
+case object PushSignal
+
 case class InitMessage(neighbors: Map[String, ActorRef])
 case object StartMessage
 case object StopMessage
