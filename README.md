@@ -6,7 +6,7 @@
 * **Scala 2.11.8**
 
 ## Instruction
-After cloning the repository and before running sbt, one should first run 
+[INVALID] After cloning the repository and before running sbt, one should first run 
 
 ```
 #!shell
