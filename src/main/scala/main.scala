@@ -3,6 +3,7 @@ import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
 import gossiper._
+import graph.GraphFileReader
 import message._
 
 import scala.collection.immutable.Map
@@ -16,7 +17,11 @@ import scala.math.abs
 
 object Simulation {
   def main(args: Array[String]): Unit = {
-    sim()
+    fileReadTest()
+  }
+
+  def fileReadTest() = {
+    println(GraphFileReader("sf_200_10_0.data.gz").readGraph())
   }
 
   def sim() {
