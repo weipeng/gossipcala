@@ -2,6 +2,7 @@ package gossiper
 
 import breeze.linalg.DenseVector
 import breeze.numerics._
+import util.Configuration.config
 
 
 case class SingleMeanGossiper private(override val data: DenseVector[Double],
@@ -12,9 +13,9 @@ case class SingleMeanGossiper private(override val data: DenseVector[Double],
                                       convergenceCount: Int = 0,
                                       lastMetric: Double = 0.0) extends AggregateGossiper[Double] {
 
-  private val stoppingThreshold: Int = 15
-  private val errorBound: Double = 0.001
-  private val wastedRoundThreshold: Double = 0.00001
+  private val stoppingThreshold: Int = config.getInt("stoppingThreshold")
+  private val errorBound: Double = config.getDouble("errorBound")
+  private val wastedRoundThreshold: Double = config.getDouble("wastedRoundThreshold")
 
   override def wrap(): SingleMeanGossiper = copy(status = GossiperStatus.COMPLETE)
 
