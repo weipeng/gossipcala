@@ -14,7 +14,8 @@ libraryDependencies ++= Seq(
   "net.liftweb" %% "lift-json" % "2.6",
   "com.assembla.scala-incubator" %% "graph-core" % "1.11.0",
   "com.typesafe.scala-logging" %% "scala-logging" % "3.4.0",
-  "ch.qos.logback" %  "logback-classic" % "1.1.7"
+  "ch.qos.logback" %  "logback-classic" % "1.1.7",
+  "com.typesafe" % "config" % "1.3.0"
 )
 
 val resolvers = Seq(

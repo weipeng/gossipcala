@@ -2,7 +2,7 @@ package gossiper
 
 import breeze.linalg.DenseVector
 import breeze.numerics._
-import util.Configuration.config
+import util.Configs.config
 
 
 case class SingleMeanGossiper private(override val data: DenseVector[Double],
