@@ -20,6 +20,7 @@ import scala.math.abs
 
 
 object Simulation {
+
   def sim(numNodes: Int, 
           data: DenseVector[Double], 
           repeatition: Int = 1,
@@ -31,7 +32,7 @@ object Simulation {
     val graph = GraphFileReader("sf_200_10_0.data.gz").readGraph()
 
     var flag = true
-    (0 to repeatition) foreach { i =>
+    (0 until repeatition) foreach { i =>
       val system = ActorSystem("Gossip")
       val members = new ArrayBuffer[ActorRef]
       (0 until numNodes) foreach { i =>
@@ -43,7 +44,7 @@ object Simulation {
         )
       }
 
-      (0 to numNodes) foreach { m => 
+      (0 until numNodes) foreach { m => 
         val node = graph.nodes(m)
         members(m) ! InitMessage(node.links map (n => n.name -> members(n.id)) toMap)
       }
