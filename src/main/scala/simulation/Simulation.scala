@@ -1,12 +1,14 @@
 package simulation
 
-import actor._
+import actor.PushPullGossiper
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
 import gossiper._
 import graph.GraphFileReader
 import message._
+import breeze.linalg.DenseVector
+import breeze.stats._
 
 import scala.collection.immutable.Map
 import scala.collection.mutable.ArrayBuffer
@@ -21,11 +23,12 @@ object Simulation {
   def sim(numNodes: Int, 
           data: DenseVector[Double], 
           repeatition: Int = 1,
-          verbose = false) {
+          verbose: Boolean = false) {
 
     implicit val timeout = Timeout(1 seconds)
 
-    val dataMean = data.mean()
+    val dataMean = mean(data)
+    val graph = GraphFileReader("sf_200_10_0.data.gz").readGraph()
 
     var flag = true
     (0 to repeatition) foreach { i =>
@@ -35,9 +38,16 @@ object Simulation {
         members.append(
           system.actorOf(
             Props(
-              new PushPullGossiper(s"node$i", 
-                SingleMeanGossiper(data(i)))), name = "node" + i)
+              new PushPullGossiper(s"node$i", SingleMeanGossiper(data(i))), 
+              name = "" + i
+            )
+          )
         )
+      }
+
+      (0 to numNodes) foreach { n => 
+        val node = graph.nodes(i)
+        members(n) ! InitMessage(node.links foreach (j => j.toString -> members(j)) toMap)
       }
 
       flag = true
@@ -59,9 +69,10 @@ object Simulation {
               println(m.path.name + " " + abs(x(i).estimate / dataMean - 1))
           }
         }
+
+        if (flag) 
+          system.terminate
       }
-      if (flag) 
-        system.terminate
     }
 
   }
