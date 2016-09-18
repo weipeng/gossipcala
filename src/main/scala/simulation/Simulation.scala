@@ -37,17 +37,15 @@ object Simulation {
       (0 until numNodes) foreach { i =>
         members.append(
           system.actorOf(
-            Props(
-              new PushPullGossiper(s"node$i", SingleMeanGossiper(data(i))), 
-              name = "" + i
-            )
+            Props(new PushPullGossiper(s"node$i", SingleMeanGossiper(data(i)))),
+            name = "" + i
           )
         )
       }
 
-      (0 to numNodes) foreach { n => 
-        val node = graph.nodes(i)
-        members(n) ! InitMessage(node.links foreach (j => j.toString -> members(j)) toMap)
+      (0 to numNodes) foreach { m => 
+        val node = graph.nodes(m)
+        members(m) ! InitMessage(node.links map (n => n.name -> members(n.id)) toMap)
       }
 
       flag = true

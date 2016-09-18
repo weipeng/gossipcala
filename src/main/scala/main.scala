@@ -21,7 +21,13 @@ object Simulation {
   }
 
   def fileReadTest() = {
-    println(GraphFileReader("sf_200_10_0.data.gz").readGraph())
+    val graph = GraphFileReader("sf_200_10_0.data.gz").readGraph()
+    //println(graph.nodes)
+    println(graph.nodes(2).links)
+    graph.nodes(2).links foreach { n =>
+      println(n.id.getClass.getName)
+    }
+    //println(graph)
   }
 
   def sim() {
