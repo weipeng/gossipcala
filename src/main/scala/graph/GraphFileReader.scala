@@ -45,18 +45,28 @@ case class JsonGraph(graph: JsonGraphProperty,
                      directed: Boolean,
                      multigraph: Boolean) {
   def toGraph(): Graph = {
+    val SFPattern = ".*barabasi_albert_graph.*".r
+    val SWPattern = ".*watts_strogatz_graph.*".r 
+
     val nodeMap = nodes.map(n => n.id -> Node(n.id, List.empty)).toMap
-    val linkedNodeMap = links.foldLeft(nodeMap){(map, link) =>
+
+    val linkedNodeMap = links.foldLeft(nodeMap) { (map, link) =>
       val updatedNodes = (map.get(link.source), map.get(link.target)) match {
         case (Some(sourceNode), Some(targetNode)) =>
           List(
-          link.source -> sourceNode.copy(links = sourceNode.links :+ targetNode),
-          link.target -> targetNode.copy(links = targetNode.links :+ sourceNode)
-        )
+            link.source -> sourceNode.copy(links = sourceNode.links :+ targetNode),
+            link.target -> targetNode.copy(links = targetNode.links :+ sourceNode)
+          )
         case _ => Nil
       }
       map ++ updatedNodes
     }
-    Graph(graph.name, multigraph, directed, linkedNodeMap.values.toList)
+
+    val graphType = graph.name match {
+      case SFPattern() => "SF",
+      case SWPattern() => "SW"
+    }
+
+    Graph(graph.name, graphType, multigraph, directed, linkedNodeMap.values.toList)
   }
 }
