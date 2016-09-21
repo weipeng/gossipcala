@@ -5,7 +5,7 @@ package graph
   * Date: 13/09/2016
   */
 case class Graph(name: String, multigraph: Boolean, directed: Boolean, nodes: List[Node]) {
-  def nodesNumber: Int = nodes.size
+  def order: Int = nodes.size
 
   override def toString(): String = s"Graph($name, $multigraph, $directed, ${nodes.sortBy(_.id)})"
 }
