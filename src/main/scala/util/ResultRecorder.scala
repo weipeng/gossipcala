@@ -2,12 +2,12 @@ package util
 
 import com.github.tototoshi.csv.CSVWriter
 import java.io.File
-import util.Configs.config
+import util.Config.config
 
 
 object Recorder {
   def record(filename: String, data: Map[String, String]) {
-    val path = config.getString("outputPath")
+    val path = Config.util.outputPath
     val file = new File(s"$path$filename.csv")
     /*val writer = file.exists match {
       case true => CSVWriter.open(file, append=true)
