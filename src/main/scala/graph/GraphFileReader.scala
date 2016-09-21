@@ -19,8 +19,7 @@ case class GraphFileReader(fileName: String) extends LazyLogging {
     implicit val formats = DefaultFormats
     parse(json).extractOpt[JsonGraph] match {
       case None => throw new RuntimeException("json string is not valid")
-      case Some(g) =>
-        g.toGraph()
+      case Some(g) => g.toGraph()
     }
   }
 
@@ -29,8 +28,7 @@ case class GraphFileReader(fileName: String) extends LazyLogging {
     val targetFilePath = List(projectPath, pathPrefix, fileName).mkString("/")
     logger.info(s"reading from $targetFilePath")
     GzFileIterator(targetFilePath).toList match {
-      case Nil =>
-        throw new RuntimeException(s"$targetFilePath is empty")
+      case Nil => throw new RuntimeException(s"$targetFilePath is empty")
       case head :: _ => head
     }
   }
@@ -63,8 +61,9 @@ case class JsonGraph(graph: JsonGraphProperty,
     }
 
     val graphType = graph.name match {
-      case SFPattern() => "SF",
+      case SFPattern() => "SF"
       case SWPattern() => "SW"
+      case _ => ""
     }
 
     Graph(graph.name, graphType, multigraph, directed, linkedNodeMap.values.toList)

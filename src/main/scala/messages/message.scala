@@ -17,6 +17,8 @@ case object StartMessage
 case object StopMessage
 
 case object CheckState
-case class NodeState(status: GossiperStatus.Value, round: Int, estimate: Double)
+case class NodeState(status: GossiperStatus.Value, 
+                     roundCount: Int, wastedRoundCount: Int, 
+                     messageCount: Int, estimate: Double)
 
 case object KillMessage

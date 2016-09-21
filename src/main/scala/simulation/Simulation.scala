@@ -17,6 +17,7 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.language.postfixOps
 import scala.math.abs
+import util.Recorder
 
 
 object Simulation {
@@ -69,8 +70,13 @@ object Simulation {
           }
         }
 
-        if (flag) 
+        if (flag) { 
+          futureList map { nodeStates =>
+            val output = Recorder.gatherResults(dataMean, graph, nodeStates)
+            Recorder.record(s"${numNodes}_sim_out", output)                    
+          }
           system.terminate
+        }
       }
     }
 

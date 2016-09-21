@@ -39,7 +39,9 @@ class PushPullGossiper(override val name: String,
       context.stop(self)
 
     case CheckState =>
-      sender ! NodeState(gossiper.status, gossiper.roundCount, gossiper.estimate())
+      sender ! NodeState(gossiper.status, gossiper.roundCount, 
+                         gossiper.wastedRoundCount, gossiper.messageCount, 
+                         gossiper.estimate())
 
     case msg =>
       println(s"Unexpected message $msg received")
