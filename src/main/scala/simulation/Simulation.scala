@@ -36,6 +36,8 @@ object Simulation {
                         "Graph mean degree" -> graph.meanDegree.toString)
 
     var flag = false
+
+    lazy val recorder = new Recorder() 
     (0 until repeatition) foreach { i =>
       println(s"Starting round $i")
       val system = ActorSystem("Gossip")
@@ -77,9 +79,9 @@ object Simulation {
 
         if (flag) { 
           futureList map { nodeStates =>
-            val output = Recorder.gatherResults(dataMean, graph.order, nodeStates)
+            val output = recorder.gatherResults(dataMean, graph.order, nodeStates)
             val result = graphInfo ++ output ++ Map("simCounter" -> i.toString)
-            Recorder.record(s"${numNodes}_sim_out", result)
+            recorder.record(s"${numNodes}_sim_out.csv", result)
           }
           system.terminate
         }

@@ -2,6 +2,7 @@ package util
 
 import com.github.tototoshi.csv.CSVWriter
 import java.io.File
+import java.io.IOException
 import util.Config.config
 import scala.collection.immutable.Map
 import scala.collection.mutable.ArrayBuffer
@@ -10,24 +11,32 @@ import breeze.linalg._
 import breeze.numerics._
 import breeze.stats.{mean, variance}
 import graph.Graph
+import com.typesafe.scalalogging.LazyLogging
 
 
-object Recorder {
+class Recorder extends LazyLogging {
 
   def record(fileName: String, data: Map[String, String]) {
     val pathPrefix = Config.util.outputPath
     val projectPath = new File(".").getCanonicalPath
-    val targetFilePath = List(projectPath, pathPrefix, fileName+".csv").mkString("/")
+    val targetFilePath = List(projectPath, pathPrefix, fileName).mkString("/")
     val file = new File(targetFilePath)
-    
-    val writer = CSVWriter.open(targetFilePath, append=file.exists)
+    val ifAppend = file.exists    
 
-    if (! file.exists) { 
-      writer.writeRow(data.keys.toSeq)
+    try {
+      file.getParentFile().mkdirs() 
+      val writer = CSVWriter.open(targetFilePath, append=ifAppend)
+
+      if (! file.exists) { 
+        writer.writeRow(data.keys.toSeq)
+      }
+      writer.writeRow(data.values.toSeq)
+      writer.close()
+    } catch {
+      case ex: IOException => {
+        logger.info("IO Exception")
+      }    
     }
-
-    writer.writeRow(data.values.toSeq)
-    writer.close()
   }
 
   def gatherResults(dataMean: Double, 
