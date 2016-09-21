@@ -5,6 +5,7 @@ import akka.util.Timeout
 import gossiper._
 import graph.GraphFileReader
 import message._
+import simulation.Simulation
 
 import scala.collection.immutable.Map
 import scala.collection.mutable.ArrayBuffer
@@ -15,9 +16,10 @@ import scala.language.postfixOps
 import scala.math.abs
 
 
-object Simulation {
+object Main {
   def main(args: Array[String]): Unit = {
-    fileReadTest()
+    Simulation.batchSim()
+    //sim()
   }
 
   def fileReadTest() = {

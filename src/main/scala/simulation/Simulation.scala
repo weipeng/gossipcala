@@ -17,8 +17,7 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.language.postfixOps
 import scala.math.abs
-import util.Recorder
-import scalaz.Scalaz._
+import util.{DataReader, Recorder}
 
 
 object Simulation {
@@ -31,13 +30,14 @@ object Simulation {
     implicit val timeout = Timeout(1 seconds)
 
     val dataMean = mean(data)
-    val graph = GraphFileReader("sf_200_10_0.data.gz").readGraph()
+    val graph = GraphFileReader(s"sf_${numNodes}_10_0.data.gz").readGraph()
     val graphInfo = Map("Graph order" -> graph.order.toString,
                         "Graph type" -> graph.graphType,
                         "Graph mean degree" -> graph.meanDegree.toString)
 
-    var flag = true
+    var flag = false
     (0 until repeatition) foreach { i =>
+      println(s"Starting round $i")
       val system = ActorSystem("Gossip")
       val members = new ArrayBuffer[ActorRef]
       (0 until numNodes) foreach { i =>
@@ -54,10 +54,10 @@ object Simulation {
         members(m) ! InitMessage(node.links map (n => n.name -> members(n.id)) toMap)
       }
 
-      flag = true
+      flag = false
       members.foreach { m => m ! StartMessage }
       while (!flag) {
-        Thread.sleep(150)
+        Thread.sleep(200)
 
         val futures = members map { m =>
           (m ? CheckState).mapTo[NodeState]
@@ -69,24 +69,29 @@ object Simulation {
 
         futureList map { x =>
           for ((m, i) <- members.zipWithIndex) {
-            if (verbose) 
+            if (verbose) { 
               println(m.path.name + " " + abs(x(i).estimate / dataMean - 1))
+            }
           }
         }
 
         if (flag) { 
           futureList map { nodeStates =>
             val output = Recorder.gatherResults(dataMean, graph.order, nodeStates)
-            Recorder.record(s"${numNodes}_sim_out", graphInfo |+| output)                    
+            val result = graphInfo ++ output ++ Map("simCounter" -> i.toString)
+            Recorder.record(s"${numNodes}_sim_out", result)
           }
           system.terminate
         }
       }
     }
-
   }
 
-
-
-
+  def batchSim() {
+    val repeatedTimes = 2
+    val numNodes = 200
+    val dataReader = new DataReader() 
+    val data = dataReader.read(s"normal_1000_${numNodes}.csv.gz")
+    sim(numNodes, data, repeatedTimes)    
+  }
 }

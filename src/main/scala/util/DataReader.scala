@@ -5,9 +5,9 @@ import breeze.linalg.DenseVector
 
 
 class DataReader extends LazyLogging {
-  lazy val pathPrefix = "syntheticdata"
 
   def read(fileName: String): DenseVector[Double] = {
+    val pathPrefix = Config.util.dataPath
     val projectPath = new java.io.File(".").getCanonicalPath
     val targetFilePath = List(projectPath, pathPrefix, fileName).mkString("/")
 

@@ -8,21 +8,23 @@ import scala.collection.mutable.ArrayBuffer
 import message.NodeState
 import breeze.linalg._
 import breeze.numerics._
-import breeze.stats._
+import breeze.stats.{mean, variance}
 import graph.Graph
 
 
 object Recorder {
+
   def record(fileName: String, data: Map[String, String]) {
     val pathPrefix = Config.util.outputPath
     val projectPath = new File(".").getCanonicalPath
     val targetFilePath = List(projectPath, pathPrefix, fileName+".csv").mkString("/")
     val file = new File(targetFilePath)
-
+    
     val writer = CSVWriter.open(targetFilePath, append=file.exists)
 
-    if (file.exists) 
+    if (! file.exists) { 
       writer.writeRow(data.keys.toSeq)
+    }
 
     writer.writeRow(data.values.toSeq)
     writer.close()
