@@ -18,6 +18,7 @@ import scala.concurrent.duration._
 import scala.language.postfixOps
 import scala.math.abs
 import util.Recorder
+import scalaz.Scalaz._
 
 
 object Simulation {
@@ -31,6 +32,9 @@ object Simulation {
 
     val dataMean = mean(data)
     val graph = GraphFileReader("sf_200_10_0.data.gz").readGraph()
+    val graphInfo = Map("Graph order" -> graph.order.toString,
+                        "Graph type" -> graph.graphType,
+                        "Graph mean degree" -> graph.meanDegree.toString)
 
     var flag = true
     (0 until repeatition) foreach { i =>
@@ -72,8 +76,8 @@ object Simulation {
 
         if (flag) { 
           futureList map { nodeStates =>
-            val output = Recorder.gatherResults(dataMean, graph, nodeStates)
-            Recorder.record(s"${numNodes}_sim_out", output)                    
+            val output = Recorder.gatherResults(dataMean, graph.order, nodeStates)
+            Recorder.record(s"${numNodes}_sim_out", graphInfo |+| output)                    
           }
           system.terminate
         }

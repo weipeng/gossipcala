@@ -29,12 +29,12 @@ object Recorder {
   }
 
   def gatherResults(dataMean: Double, 
-                    graph: Graph, 
+                    graphOrder: Int, 
                     nodeStates: ArrayBuffer[NodeState]): Map[String, String] = {
-    val rounds = DenseVector.zeros[Double](graph.order)
-    val messages = DenseVector.zeros[Double](graph.order)
-    val wastedRnds = DenseVector.zeros[Double](graph.order)
-    val errors = DenseVector.zeros[Double](graph.order)
+    val rounds = DenseVector.zeros[Double](graphOrder)
+    val messages = DenseVector.zeros[Double](graphOrder)
+    val wastedRnds = DenseVector.zeros[Double](graphOrder)
+    val errors = DenseVector.zeros[Double](graphOrder)
 
     for ((n, i) <- nodeStates.zipWithIndex) {
       rounds(i) = n.roundCount
@@ -44,9 +44,6 @@ object Recorder {
     }
     
     Map(
-      "Graph order" -> graph.order.toString,
-      "Graph type" -> graph.graphType,
-      "Graph mean degree" -> graph.meanDegree.toString,
       "Mean L1-absolute error" -> mean(abs(errors)).toString,
       "Var L1-absolute error" -> variance(abs(errors)).toString,
       "Mean L2 error" -> mean(pow(errors, 2)).toString,
