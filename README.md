@@ -19,9 +19,9 @@ sbt run
 ## Dependency of Python
 To install all the required python packages, run
 ```
-pip install ujson numpy scipy scikit-learn networkx matplotlib
+pip install ujson numpy scipy scikit-learn networkx matplotlib pandas seaborn
 ```
 or, if you prefer conda, run the following one instead:
 ```
-conda install ujson numpy scipy scikit-learn networkx matplotlib
+conda install ujson numpy scipy scikit-learn networkx matplotlib pandas seaborn
 ```

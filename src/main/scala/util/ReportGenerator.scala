@@ -13,12 +13,13 @@ case class ReportGenerator(fileName: String) extends LazyLogging {
     val projectPath = new File(".").getCanonicalPath
     val targetFilePath = List(projectPath, pathPrefix, fileName).mkString("/")
     val file = new File(targetFilePath)
+    val ifAppend = file.exists
 
     try {
       file.getParentFile.mkdirs()
-      val writer = CSVWriter.open(targetFilePath, append = file.exists)
+      val writer = CSVWriter.open(targetFilePath, append = ifAppend)
 
-      if (!file.exists) {
+      if (! ifAppend) {
         writer.writeRow(data.keys.toSeq)
       }
       writer.writeRow(data.values.toSeq)
