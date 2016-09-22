@@ -1,5 +1,6 @@
 import gzip
 import networkx as nx
+import numpy as np
 from networkx.readwrite import json_graph
 from ujson import dumps
 
@@ -13,6 +14,10 @@ for graph_type in ['sf', 'sw']:
                         if nx.is_connected(G):
                             break    
                     data = json_graph.node_link_data(G)
+                    data['index'] = i 
+                    data['order'] = G.order()
+                    data['mean_degree'] = np.mean(G.degree().values())
+                    data['var_degree'] = np.var(G.degree().values())
                     jdata = dumps(data)
                     with gzip.open('../graphs/sf_%d_%d_%d.data.gz'% (num_nodes, p, i), 'wb') as f:
                         f.write(jdata)
@@ -25,6 +30,10 @@ for graph_type in ['sf', 'sw']:
                         if nx.is_connected(G):
                             break
                     data = json_graph.node_link_data(G)
+                    data['index'] = i
+                    data['order'] = G.order()
+                    data['mean_degree'] = np.mean(G.degree().values())
+                    data['var_degree'] = np.var(G.degree().values())
                     jdata = dumps(data)
-                    with gzip.open('../graphs/sf_%d_%d_%d.data.gz'% (num_nodes, p, i), 'wb') as f:
+                    with gzip.open('../graphs/sw_%d_%d_%d.data.gz'% (num_nodes, p, i), 'wb') as f:
                         f.write(jdata)

@@ -5,7 +5,7 @@ import breeze.numerics._
 import breeze.stats.{mean, variance}
 import message.NodeState
 
-import scala.collection.immutable.Map
+import scala.collection.immutable.ListMap
 
 /**
   * Author: yanyang.wang
@@ -24,7 +24,7 @@ case class ResultAnalyser(dataMean: Double, graphOrder: Int, nodeStates: List[No
       errors(i) = n.estimate / dataMean - 1
     }
 
-    Map(
+    ListMap(
       "Mean L1-absolute Error" -> mean(abs(errors)).toString,
       "Var L1-absolute Error" -> variance(abs(errors)).toString,
       "Mean L2 Error" -> mean(pow(errors, 2)).toString,

@@ -9,7 +9,7 @@ import scala.collection.mutable.ListBuffer
 import scala.language.postfixOps
 
 
-class WeightedGossiper(override val name: String,
+case class WeightedGossiper(override val name: String,
                        override val gossiper: SingleMeanGossiper) extends GossiperActorTrait[Double, SingleMeanGossiper] {
 
   var diffuseMat: Map[ActorRef, Double] = Map()

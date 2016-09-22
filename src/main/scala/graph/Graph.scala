@@ -1,12 +1,23 @@
 package graph
 
+import breeze.linalg.DenseVector
+import breeze.stats._
 /**
   * Author: yanyang.wang
   * Date: 13/09/2016
   */
-case class Graph(name: String, graphType: String, multigraph: Boolean, directed: Boolean, nodes: List[Node]) {
-  def order: Int = nodes.size
-  def meanDegree: Double = nodes.map(_.links.size).sum.toDouble / order 
+case class Graph(name: String, 
+                 graphType: String, 
+                 multigraph: Boolean, 
+                 directed: Boolean, 
+                 nodes: List[Node],
+                 order: Int,
+                 index: Int) {
+
+  def degrees: Array[Double] = nodes.map(_.links.size.toDouble).toArray
+  def meanDegree: Double = mean(new DenseVector(degrees))
+  def varDegree: Double = variance(new DenseVector(degrees))
+
 
   override def toString(): String = s"Graph($name, $multigraph, $directed, ${nodes.sortBy(_.id)})"
 }

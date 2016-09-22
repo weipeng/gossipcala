@@ -7,7 +7,7 @@ import message._
 import scala.util.Random
 
 
-class PushPullGossiper(override val name: String,
+case class PushPullGossiper(override val name: String,
                        override val gossiper: SingleMeanGossiper) extends GossiperActorTrait[Double, SingleMeanGossiper] {
 
   val rnd = new Random
