@@ -6,6 +6,7 @@ import gossiper._
 import graph.GraphFileReader
 import message._
 import simulation.Simulation
+import util.ReportGenerator
 
 import scala.collection.immutable.Map
 import scala.collection.mutable.ArrayBuffer
@@ -18,8 +19,8 @@ import scala.math.abs
 
 object Main {
   def main(args: Array[String]): Unit = {
-    Simulation.batchSim()
-    //sim()
+    //Simulation.batchSim()
+    sim()
   }
 
   def fileReadTest() = {
@@ -38,14 +39,12 @@ object Main {
     val system = ActorSystem("Gossip")
 
     val numNodes = 3
-    val members = new ArrayBuffer[ActorRef]
     val data = Array[Double](233, 21, 53)
     val dataSum = data.sum
-    (0 until numNodes).foreach { i =>
-      members.append(
+    val dataMean = dataSum / numNodes
+    val members = (0 until numNodes).map { i =>
         system.actorOf(Props(new PushPullGossiper(s"node$i", SingleMeanGossiper(data(i)))), name = "node" + i)
-      )
-    }
+    }.toList
 
     members(0) ! InitMessage(Map("node1" -> members(1),
       "node2" -> members(2)))
@@ -74,8 +73,12 @@ object Main {
         println("Average " + dataSum / 3)
       }
 
-      if (flag)
+      if (flag) {
+        futureList map { nodeStates =>
+          nodeStates.foreach(println)
+        }
         system.terminate
+      }
     }
   }
 }
