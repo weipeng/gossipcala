@@ -1,23 +1,22 @@
 package simulation
 
 import actor.PushPullGossiper
-import akka.actor.{ActorRef, ActorSystem, Props}
+import akka.actor.{ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
+import breeze.linalg.DenseVector
+import breeze.stats._
 import gossiper._
 import graph.GraphFileReader
 import message._
-import breeze.linalg.DenseVector
-import breeze.stats._
+import util.{DataReader, ResultRecorder}
 
 import scala.collection.immutable.Map
-import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.language.postfixOps
 import scala.math.abs
-import util.{DataReader, ResultRecorder}
 
 
 object Simulation {
@@ -40,40 +39,32 @@ object Simulation {
     lazy val recorder = new ResultRecorder()
     (0 until repeatition) foreach { i =>
       println(s"Starting round $i")
-      val system = ActorSystem("Gossip")
-      val members = new ArrayBuffer[ActorRef]
-      (0 until numNodes) foreach { i =>
-        members.append(
-          system.actorOf(
-            Props(new PushPullGossiper(s"node$i", SingleMeanGossiper(data(i)))),
-            name = "" + i
-          )
+      val system = ActorSystem("Gossip" + i)
+      val members = graph.nodes map { n =>
+        val id = n.id
+        id -> system.actorOf(
+          Props(new PushPullGossiper(s"node$id", SingleMeanGossiper(data(id)))),
+          name = id.toString
         )
-      }
+      } toMap
 
-      (0 until numNodes) foreach { m => 
-        val node = graph.nodes(m)
-        members(m) ! InitMessage(node.links map (n => n.name -> members(n.id)) toMap)
+      graph.nodes foreach { node =>
+        members(node.id) ! InitMessage(node.links map (n => n.name -> members(n.id)) toMap)
       }
 
       flag = false
-      members.foreach { m => m ! StartMessage }
+      members.values.foreach { m => m ! StartMessage }
       while (!flag) {
         Thread.sleep(200)
 
-        val futures = members map { m =>
+        val futures = members.values.toList map { m =>
           (m ? CheckState).mapTo[NodeState]
         }
         val futureList = Future.sequence(futures)
-        futureList map { x =>
-          flag = x.forall(_.status == GossiperStatus.COMPLETE)
-        }
-
-        futureList map { x =>
-          for ((m, i) <- members.zipWithIndex) {
-            if (verbose) { 
-              println(m.path.name + " " + abs(x(i).estimate / dataMean - 1))
-            }
+        futureList map { results =>
+          flag = results.forall(_.status == GossiperStatus.COMPLETE)
+          if (verbose) {
+            results.foreach(r => println(r.nodeName + ": " + abs(r.estimate / dataMean - 1)))
           }
         }
 

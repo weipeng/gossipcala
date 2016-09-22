@@ -33,13 +33,9 @@ case class SingleMeanGossiper private(override val data: DenseVector[Double],
   }
 
   override def update(value: Double): SingleMeanGossiper = {
-    val condition: Boolean = abs(data(1) - value) <= wastedRoundThreshold 
     data(1) = (data(1) + value) / 2.0
-      
-    condition match {
-      case true => copy(wastedRoundCount = wastedRoundCount + 1)
-      case false => this
-    }
+    val wasteCount = if (abs(data(1) - value) <= wastedRoundThreshold) 1 else 0
+    copy(wastedRoundCount = wastedRoundCount + wasteCount)
   }
 
   def bumpRound(): SingleMeanGossiper = copy(roundCount = roundCount + 1)
@@ -48,8 +44,11 @@ case class SingleMeanGossiper private(override val data: DenseVector[Double],
 }
 
 object SingleMeanGossiper {
-  def apply(initData: Double): SingleMeanGossiper = SingleMeanGossiper(
-    DenseVector(1.0, initData),
-    GossiperStatus.ACTIVE
-  )
+  def apply(initData: Double): SingleMeanGossiper = {
+    val raw = SingleMeanGossiper(
+      DenseVector(1.0, initData),
+      GossiperStatus.ACTIVE
+    )
+    raw.copy(lastMetric = raw.estimate())
+  }
 }
