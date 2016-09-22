@@ -17,5 +17,10 @@ object Config {
     lazy val outputPath = utilConfig.getString("output-path")
     lazy val dataPath = utilConfig.getString("data-path")
   }
+
+  object simulation {
+    private lazy val simulationConfig = config.getConfig("simulation")
+    lazy val checkStateTimeout = simulationConfig.getInt("check-state-timeout")
+  }
 }
 

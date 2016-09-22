@@ -10,6 +10,7 @@ import gossiper._
 import graph.GraphFileReader
 import message._
 import util.{ResultAnalyser, DataReader, ReportGenerator}
+import util.Config.simulation
 
 import scala.collection.immutable.Map
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -54,7 +55,7 @@ object Simulation {
       flag = false
       members.values.foreach { m => m ! StartMessage }
       while (!flag) {
-        Thread.sleep(200)
+        Thread.sleep(simulation.checkStateTimeout)
 
         val futures = members.values.toList map { m =>
           (m ? CheckState).mapTo[NodeState]
