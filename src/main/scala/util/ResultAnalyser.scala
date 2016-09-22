@@ -25,16 +25,16 @@ case class ResultAnalyser(dataMean: Double, graphOrder: Int, nodeStates: List[No
     }
 
     Map(
-      "Mean L1-absolute error" -> mean(abs(errors)).toString,
-      "Var L1-absolute error" -> variance(abs(errors)).toString,
-      "Mean L2 error" -> mean(pow(errors, 2)).toString,
-      "Var L2 error" -> variance(pow(errors, 2)).toString,
-      "Mean rounds" -> mean(rounds).toString,
-      "Var rounds" -> variance(rounds).toString,
-      "Mean wasted rounds" -> mean(wastedRnds).toString,
-      "Var wasted rounds" -> variance(wastedRnds).toString,
-      "Mean messages" -> mean(messages).toString,
-      "Var messages" -> variance(messages).toString
+      "Mean L1-absolute Error" -> mean(abs(errors)).toString,
+      "Var L1-absolute Error" -> variance(abs(errors)).toString,
+      "Mean L2 Error" -> mean(pow(errors, 2)).toString,
+      "Var L2 Error" -> variance(pow(errors, 2)).toString,
+      "Mean Rounds" -> mean(rounds).toString,
+      "Var Rounds" -> variance(rounds).toString,
+      "Mean Wasted Rounds" -> mean(wastedRnds).toString,
+      "Var Wasted Rounds" -> variance(wastedRnds).toString,
+      "Mean Messages" -> mean(messages).toString,
+      "Var Messages" -> variance(messages).toString
     )
   }
 }

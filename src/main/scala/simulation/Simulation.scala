@@ -71,7 +71,7 @@ object Simulation {
         if (flag) { 
           futureList map { nodeStates =>
             val rawReport = ResultAnalyser(dataMean, graph.order, nodeStates).analyse()
-            val report = graphInfo ++ rawReport ++ Map("simCounter" -> i.toString)
+            val report = graphInfo ++ rawReport ++ Map("Sim Counter" -> i.toString)
             println(report)
             ReportGenerator(s"${numNodes}_sim_out.csv").record(report)
           }
