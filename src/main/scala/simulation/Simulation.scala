@@ -9,7 +9,7 @@ import breeze.stats._
 import gossiper._
 import graph.GraphFileReader
 import message._
-import util.{DataReader, ResultRecorder}
+import util.{ResultAnalyser, DataReader, ReportGenerator}
 
 import scala.collection.immutable.Map
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -36,7 +36,6 @@ object Simulation {
 
     var flag = false
 
-    lazy val recorder = new ResultRecorder()
     (0 until repeatition) foreach { i =>
       println(s"Starting round $i")
       val system = ActorSystem("Gossip" + i)
@@ -70,10 +69,10 @@ object Simulation {
 
         if (flag) { 
           futureList map { nodeStates =>
-            val output = recorder.gatherResults(dataMean, graph.order, nodeStates)
-            val result = graphInfo ++ output ++ Map("simCounter" -> i.toString)
-            println(result)
-            recorder.record(s"${numNodes}_sim_out.csv", result)
+            val rawReport = ResultAnalyser(dataMean, graph.order, nodeStates).analyse()
+            val report = graphInfo ++ rawReport ++ Map("simCounter" -> i.toString)
+            println(report)
+            ReportGenerator(s"${numNodes}_sim_out.csv").record(report)
           }
           system.terminate
         }
