@@ -17,8 +17,9 @@ class PushPullGossiper(override val name: String,
       context become work(neighbors, gossiper.bumpRound())
 
     case PushMessage(value) =>
-      sender ! makePullMessage()
-      context become work(neighbors, gossiper.update(value))
+      val (msg, state) = makePullMessage(gossiper)
+      sender ! msg
+      context become work(neighbors, state.update(value))
 
     case PullMessage(value) =>
       val newState = gossiper.update(value).compareData()
@@ -50,17 +51,14 @@ class PushPullGossiper(override val name: String,
   override def gossip(neighbors: Map[String, ActorRef], gossiper: SingleMeanGossiper): SingleMeanGossiper = {
     val nbs = neighbors.values.toArray
     val neighbor = nbs(rnd.nextInt(neighbors.size))
-    neighbor ! makePushMessage()
-    gossiper.bumpRound()
+    val (msg, state) = makePushMessage(gossiper)
+    neighbor ! msg
+    state.bumpRound()
   }
 
-  private def makePushMessage() = {
-    gossiper.bumpMessage()
-    PushMessage(gossiper.data(1))
-  }
+  private def makePushMessage(gossiper: SingleMeanGossiper): (PushMessage, SingleMeanGossiper) =
+    (PushMessage(gossiper.data(1)), gossiper.bumpMessage())
 
-  private def makePullMessage() = {
-    gossiper.bumpMessage()
-    PullMessage(gossiper.data(1))
-  }
+  private def makePullMessage(gossiper: SingleMeanGossiper): (PullMessage, SingleMeanGossiper) =
+    (PullMessage(gossiper.data(1)), gossiper.bumpMessage())
 }

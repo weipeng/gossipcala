@@ -17,7 +17,7 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.language.postfixOps
 import scala.math.abs
-import util.{DataReader, Recorder}
+import util.{DataReader, ResultRecorder}
 
 
 object Simulation {
@@ -37,7 +37,7 @@ object Simulation {
 
     var flag = false
 
-    lazy val recorder = new Recorder() 
+    lazy val recorder = new ResultRecorder()
     (0 until repeatition) foreach { i =>
       println(s"Starting round $i")
       val system = ActorSystem("Gossip")
@@ -94,7 +94,7 @@ object Simulation {
     val repeatedTimes = 2
     val numNodes = 200
     val dataReader = new DataReader() 
-    val data = dataReader.read(s"normal_1000_${numNodes}.csv.gz")
+    val data = dataReader.read(s"normal_1000_$numNodes.csv.gz")
     sim(numNodes, data, repeatedTimes)    
   }
 }

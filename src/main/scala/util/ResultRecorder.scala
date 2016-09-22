@@ -14,14 +14,14 @@ import graph.Graph
 import com.typesafe.scalalogging.LazyLogging
 
 
-class Recorder extends LazyLogging {
+class ResultRecorder extends LazyLogging {
 
   def record(fileName: String, data: Map[String, String]) {
     val pathPrefix = Config.util.outputPath
     val projectPath = new File(".").getCanonicalPath
     val targetFilePath = List(projectPath, pathPrefix, fileName).mkString("/")
     val file = new File(targetFilePath)
-    val ifAppend = file.exists    
+    val ifAppend = file.exists
 
     try {
       file.getParentFile().mkdirs() 
