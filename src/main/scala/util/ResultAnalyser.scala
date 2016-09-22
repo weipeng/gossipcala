@@ -12,7 +12,7 @@ import scala.collection.immutable.Map
   * Date: 22/09/2016
   */
 case class ResultAnalyser(dataMean: Double, graphOrder: Int, nodeStates: List[NodeState]) {
-  def analysis(): Map[String, String] = {
+  def analyse(): Map[String, String] = {
     val rounds = DenseVector.zeros[Double](graphOrder)
     val messages = DenseVector.zeros[Double](graphOrder)
     val wastedRnds = DenseVector.zeros[Double](graphOrder)
