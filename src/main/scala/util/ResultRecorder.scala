@@ -41,12 +41,11 @@ class ResultRecorder extends LazyLogging {
 
   def gatherResults(dataMean: Double, 
                     graphOrder: Int, 
-                    nodeStates: ArrayBuffer[NodeState]): Map[String, String] = {
+                    nodeStates: List[NodeState]): Map[String, String] = {
     val rounds = DenseVector.zeros[Double](graphOrder)
     val messages = DenseVector.zeros[Double](graphOrder)
     val wastedRnds = DenseVector.zeros[Double](graphOrder)
     val errors = DenseVector.zeros[Double](graphOrder)
-
     for ((n, i) <- nodeStates.zipWithIndex) {
       rounds(i) = n.roundCount
       wastedRnds(i) = n.wastedRoundCount

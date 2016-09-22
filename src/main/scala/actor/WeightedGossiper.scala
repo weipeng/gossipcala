@@ -56,9 +56,12 @@ class WeightedGossiper(override val name: String,
       context.stop(self)
 
     case CheckState =>
-      sender ! NodeState(gossiper.status, gossiper.roundCount, 
-                         gossiper.wastedRoundCount, gossiper.messageCount,
-                         gossiper.estimate())
+      sender ! NodeState(name,
+        gossiper.status,
+        gossiper.roundCount,
+        gossiper.wastedRoundCount,
+        gossiper.messageCount,
+        gossiper.estimate())
 
   }
 
