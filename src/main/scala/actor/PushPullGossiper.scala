@@ -54,8 +54,13 @@ class PushPullGossiper(override val name: String,
     gossiper.bumpRound()
   }
 
-  private def makePushMessage() = PushMessage(gossiper.data(1))
+  private def makePushMessage() = {
+    gossiper.bumpMessage()
+    PushMessage(gossiper.data(1))
+  }
 
-  private def makePullMessage() = PullMessage(gossiper.data(1))
-
+  private def makePullMessage() = {
+    gossiper.bumpMessage()
+    PullMessage(gossiper.data(1))
+  }
 }

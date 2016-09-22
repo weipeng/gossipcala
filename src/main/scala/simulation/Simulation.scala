@@ -81,6 +81,7 @@ object Simulation {
           futureList map { nodeStates =>
             val output = recorder.gatherResults(dataMean, graph.order, nodeStates)
             val result = graphInfo ++ output ++ Map("simCounter" -> i.toString)
+            println(result)
             recorder.record(s"${numNodes}_sim_out.csv", result)
           }
           system.terminate
