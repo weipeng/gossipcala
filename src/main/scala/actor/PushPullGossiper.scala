@@ -19,7 +19,7 @@ case class PushPullGossiper(override val name: String,
     case PushMessage(value) =>
       val (msg, state) = makePullMessage(gossiper)
       sender ! msg
-      context become work(neighbors, state.update(value))
+      context become work(neighbors, state.bumpRound.update(value))
 
     case PullMessage(value) =>
       val newState = gossiper.update(value).compareData()

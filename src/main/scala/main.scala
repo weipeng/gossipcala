@@ -19,8 +19,8 @@ import scala.math.abs
 
 object Main {
   def main(args: Array[String]): Unit = {
-    Simulation.batchSim()
-    //sim()
+    //Simulation.batchSim()
+    sim()
   }
 
   def fileReadTest() = {
@@ -38,18 +38,18 @@ object Main {
 
     val system = ActorSystem("Gossip")
 
-    val numNodes = 3
-    val data = Array[Double](233, 21, 53)
+    val numNodes = 4
+    val data = Array[Double](233, 21, 53, 402)
     val dataSum = data.sum
     val dataMean = dataSum / numNodes
     val members = (0 until numNodes).map { i =>
         system.actorOf(Props(new PushPullGossiper(s"node$i", SingleMeanGossiper(data(i)))), name = "node" + i)
     }.toList
 
-    members(0) ! InitMessage(Map("node1" -> members(1),
-      "node2" -> members(2)))
-    members(1) ! InitMessage(Map("node0" -> members(0)))
-    members(2) ! InitMessage(Map("node1" -> members(0)))
+    members(0) ! InitMessage(Map("node1" -> members(1), "node2" -> members(2)))
+    members(1) ! InitMessage(Map("node0" -> members(0), "node3" -> members(3)))
+    members(2) ! InitMessage(Map("node0" -> members(0)))
+    members(3) ! InitMessage(Map("node1" -> members(1)))
 
     members.foreach { m => m ! StartMessage }
 
@@ -70,12 +70,12 @@ object Main {
         for ((m, i) <- members.zipWithIndex) {
           println(m.path.name + " " + abs(x(i).estimate / dataMean - 1))
         }
-        println("Average " + dataSum / 3)
+        println("Average " + dataMean)
       }
 
       if (flag) {
         futureList map { nodeStates =>
-          val rawReport = ResultAnalyser(dataMean, 3, nodeStates).analyse()
+          val rawReport = ResultAnalyser(dataMean, numNodes, nodeStates).analyse()
           println(rawReport)
           nodeStates.foreach(println)
         }
