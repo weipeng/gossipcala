@@ -6,7 +6,7 @@ import gossiper._
 import graph.GraphFileReader
 import message._
 import simulation.Simulation
-import util.ReportGenerator
+import util.{ReportGenerator, ResultAnalyser}
 
 import scala.collection.immutable.Map
 import scala.collection.mutable.ArrayBuffer
@@ -68,13 +68,15 @@ object Main {
       futureList map { x =>
         println(x + "AAAAAAAAAAAAAAAAAAH " + flag)
         for ((m, i) <- members.zipWithIndex) {
-          println(m.path.name + " " + abs(x(i).estimate / (dataSum / 3) - 1))
+          println(m.path.name + " " + abs(x(i).estimate / dataMean - 1))
         }
         println("Average " + dataSum / 3)
       }
 
       if (flag) {
         futureList map { nodeStates =>
+          val rawReport = ResultAnalyser(dataMean, 3, nodeStates).analyse()
+          println(rawReport)
           nodeStates.foreach(println)
         }
         system.terminate

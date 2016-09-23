@@ -9,8 +9,8 @@ scalaVersion := "2.11.8"
 libraryDependencies ++= Seq(
   "org.scalanlp" %% "breeze" % "0.12",
   "org.scalanlp" %% "breeze-viz" % "0.12",
-  "com.typesafe.akka" %% "akka-actor" % "2.4.9",
-  "com.typesafe.akka" %% "akka-agent" % "2.4.9",
+  "com.typesafe.akka" %% "akka-actor" % "2.4.10",
+  "com.typesafe.akka" %% "akka-agent" % "2.4.10",
   "net.liftweb" %% "lift-json" % "2.6",
   "com.assembla.scala-incubator" %% "graph-core" % "1.11.0",
   "com.typesafe.scala-logging" %% "scala-logging" % "3.4.0",

@@ -40,7 +40,7 @@ object Simulation {
                             "Graph Mean Degree" -> graph.meanDegree.toString,
                             "Graph Index" -> graph.index.toString)
 
-    def Gossiper = gossipType.toLowerCase match {
+    val Gossiper = gossipType.toLowerCase match {
       case "pushpull" => PushPullGossiper 
       case "weighted" => WeightedGossiper 
       case _ => throw new Exception("Gossip type not supported")
@@ -83,7 +83,8 @@ object Simulation {
         if (flag) { 
           futureList map { nodeStates =>
             val rawReport = ResultAnalyser(dataMean, graph.order, nodeStates).analyse()
-            val report = graphInfo ++ rawReport ++ ListMap("Sim Counter" -> i.toString, "Gossip Type" -> gossipType)
+            val report = graphInfo ++ rawReport ++ 
+                         ListMap("Sim Counter" -> (i + repeatition * graph.index).toString, "Gossip Type" -> gossipType)
             if (verbose) 
               println(report)
             ReportGenerator(s"${numNodes}_sim_out.csv").record(report)
@@ -95,7 +96,7 @@ object Simulation {
   }
 
   def batchSim() {
-    val repeatedTimes = 40
+    val repeatedTimes = 2
     val numNodes = 200
     val dataReader = new DataReader() 
     val data = dataReader.read(s"normal_1000_$numNodes.csv.gz")
@@ -105,7 +106,7 @@ object Simulation {
       for (param <- 10 to 50 by 5) {
         for (graphIndex <- 0 until 5) {
           val graph = GraphFileReader(s"sf_${numNodes}_${param}_${graphIndex}.data.gz").readGraph()
-          sim(data, graph, gt, repeatedTimes)    
+          sim(data, graph, gt, repeatedTimes, true)    
         }
       }
     }
