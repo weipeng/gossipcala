@@ -35,9 +35,10 @@ object Simulation {
     val numNodes = graph.order
     assert(data.size == graph.order)
 
-    val graphInfo = ListMap("Graph order" -> graph.order.toString,
-                            "Graph type" -> graph.graphType,
-                            "Graph mean degree" -> graph.meanDegree.toString)
+    val graphInfo = ListMap("Graph Order" -> graph.order.toString,
+                            "Graph Type" -> graph.graphType,
+                            "Graph Mean Degree" -> graph.meanDegree.toString,
+                            "Graph Index" -> graph.index.toString)
 
     def Gossiper = gossipType.toLowerCase match {
       case "pushpull" => PushPullGossiper 
@@ -50,7 +51,7 @@ object Simulation {
       if (i % 10 == 0) 
         println(s"Starting round $i")
 
-      val system = ActorSystem("Gossip " + i)
+      val system = ActorSystem("Gossip-" + i)
       val members = graph.nodes map { n =>
         val id = n.id
         id -> system.actorOf(
@@ -83,6 +84,7 @@ object Simulation {
           futureList map { nodeStates =>
             val rawReport = ResultAnalyser(dataMean, graph.order, nodeStates).analyse()
             val report = graphInfo ++ rawReport ++ ListMap("Sim Counter" -> i.toString, "Gossip Type" -> gossipType)
+            println(report)
             ReportGenerator(s"${numNodes}_sim_out.csv").record(report)
           }
           system.terminate
@@ -92,7 +94,7 @@ object Simulation {
   }
 
   def batchSim() {
-    val repeatedTimes = 40
+    val repeatedTimes = 4
     val numNodes = 200
     val dataReader = new DataReader() 
     val data = dataReader.read(s"normal_1000_$numNodes.csv.gz")
