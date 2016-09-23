@@ -84,7 +84,8 @@ object Simulation {
           futureList map { nodeStates =>
             val rawReport = ResultAnalyser(dataMean, graph.order, nodeStates).analyse()
             val report = graphInfo ++ rawReport ++ ListMap("Sim Counter" -> i.toString, "Gossip Type" -> gossipType)
-            println(report)
+            if (verbose) 
+              println(report)
             ReportGenerator(s"${numNodes}_sim_out.csv").record(report)
           }
           system.terminate
@@ -94,7 +95,7 @@ object Simulation {
   }
 
   def batchSim() {
-    val repeatedTimes = 4
+    val repeatedTimes = 40
     val numNodes = 200
     val dataReader = new DataReader() 
     val data = dataReader.read(s"normal_1000_$numNodes.csv.gz")
