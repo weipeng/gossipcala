@@ -97,7 +97,7 @@ object Simulation {
               println(report)
             ReportGenerator(s"${numNodes}_sim_out.csv").record(report)
           }
-          //system.terminate
+          system.terminate
           //Await.ready(system.whenTerminated, 10 seconds)
         }
       }
