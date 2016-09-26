@@ -1,6 +1,7 @@
 package actor
 
 import akka.actor.ActorRef
+import akka.event.Logging
 import gossiper.SingleMeanGossiper
 import message._
 
@@ -11,6 +12,7 @@ class PushPullGossiper(override val name: String,
                        override val gossiper: SingleMeanGossiper) extends GossiperActorTrait[Double, SingleMeanGossiper] {
 
   val rnd = new Random
+  val log = Logging(context.system, this)
 
   override def work(neighbors: Map[String, ActorRef], gossiper: SingleMeanGossiper): Receive = {
     case InitMessage(neighbors) =>
@@ -56,6 +58,7 @@ class PushPullGossiper(override val name: String,
     val neighbor = nbs(rnd.nextInt(neighbors.size))
     val (msg, state) = makePushMessage(gossiper)
     neighbor ! msg
+    log.debug(s"sends a push message to ${sender.toString}")
     state.bumpRound()
   }
 
