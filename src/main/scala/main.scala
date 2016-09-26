@@ -6,7 +6,7 @@ import gossiper._
 import graph.GraphFileReader
 import message._
 import simulation.Simulation
-import util.ReportGenerator
+import util.{ReportGenerator, ResultAnalyser}
 
 import scala.collection.immutable.Map
 import scala.collection.mutable.ArrayBuffer
@@ -38,18 +38,18 @@ object Main {
 
     val system = ActorSystem("Gossip")
 
-    val numNodes = 3
-    val data = Array[Double](233, 21, 53)
+    val numNodes = 4
+    val data = Array[Double](233, 21, 53, 402)
     val dataSum = data.sum
     val dataMean = dataSum / numNodes
     val members = (0 until numNodes).map { i =>
         system.actorOf(Props(new PushPullGossiper(s"node$i", SingleMeanGossiper(data(i)))), name = "node" + i)
     }.toList
 
-    members(0) ! InitMessage(Map("node1" -> members(1),
-      "node2" -> members(2)))
-    members(1) ! InitMessage(Map("node0" -> members(0)))
-    members(2) ! InitMessage(Map("node1" -> members(0)))
+    members(0) ! InitMessage(Map("node1" -> members(1), "node2" -> members(2)))
+    members(1) ! InitMessage(Map("node0" -> members(0), "node3" -> members(3)))
+    members(2) ! InitMessage(Map("node0" -> members(0)))
+    members(3) ! InitMessage(Map("node1" -> members(1)))
 
     members.foreach { m => m ! StartMessage }
 
@@ -68,13 +68,15 @@ object Main {
       futureList map { x =>
         println(x + "AAAAAAAAAAAAAAAAAAH " + flag)
         for ((m, i) <- members.zipWithIndex) {
-          println(m.path.name + " " + abs(x(i).estimate / (dataSum / 3) - 1))
+          println(m.path.name + " " + abs(x(i).estimate / dataMean - 1))
         }
-        println("Average " + dataSum / 3)
+        println("Average " + dataMean)
       }
 
       if (flag) {
         futureList map { nodeStates =>
+          val rawReport = ResultAnalyser(dataMean, numNodes, nodeStates).analyse()
+          println(rawReport)
           nodeStates.foreach(println)
         }
         system.terminate

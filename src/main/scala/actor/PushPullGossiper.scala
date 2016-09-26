@@ -7,19 +7,19 @@ import message._
 import scala.util.Random
 
 
-case class PushPullGossiper(override val name: String,
+class PushPullGossiper(override val name: String,
                        override val gossiper: SingleMeanGossiper) extends GossiperActorTrait[Double, SingleMeanGossiper] {
 
   val rnd = new Random
 
   override def work(neighbors: Map[String, ActorRef], gossiper: SingleMeanGossiper): Receive = {
     case InitMessage(neighbors) =>
-      context become work(neighbors, gossiper.bumpRound())
+      context become work(neighbors, gossiper)
 
     case PushMessage(value) =>
       val (msg, state) = makePullMessage(gossiper)
       sender ! msg
-      context become work(neighbors, state.update(value))
+      context become work(neighbors, state.bumpRound.update(value))
 
     case PullMessage(value) =>
       val newState = gossiper.update(value).compareData()

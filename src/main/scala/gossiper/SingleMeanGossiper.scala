@@ -34,7 +34,7 @@ case class SingleMeanGossiper private(override val data: DenseVector[Double],
 
   override def update(value: Double): SingleMeanGossiper = {
     data(1) = (data(1) + value) / 2.0
-    val wasteQuantity = if (abs(data(1) - value) <= wastedRoundThreshold) 1 else 0
+    val wasteQuantity = if (abs(data(1) / value) - 1 <= wastedRoundThreshold) 1 else 0
     copy(wastedRoundCount = wastedRoundCount + wasteQuantity)
   }
 
