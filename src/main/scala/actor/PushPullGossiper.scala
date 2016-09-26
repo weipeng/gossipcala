@@ -11,20 +11,23 @@ import scala.util.Random
 class PushPullGossiper(override val name: String,
                        override val gossiper: SingleMeanGossiper) extends GossiperActorTrait[Double, SingleMeanGossiper] {
 
-  val rnd = new Random
-  val log = Logging(context.system, this)
+  lazy val rnd = new Random(System.currentTimeMillis)
+  lazy val log = Logging(context.system, this)
 
   override def work(neighbors: Map[String, ActorRef], gossiper: SingleMeanGossiper): Receive = {
     case InitMessage(neighbors) =>
       context become work(neighbors, gossiper)
 
     case PushMessage(value) =>
+      log.info(s"${self.toString} receives a PUSH message from ${sender.toString}")
       val (msg, state) = makePullMessage(gossiper)
       sender ! msg
+      log.info(s"${self.toString} returns a PULL message to ${sender.toString}")
       context become work(neighbors, state.bumpRound.update(value))
 
     case PullMessage(value) =>
       val newState = gossiper.update(value).compareData()
+      log.info(s"${self.toString} receives a PULL message to ${sender.toString}")
       if (newState.toStop()) {
         self ! StopMessage
         context become work(neighbors, newState)
@@ -58,7 +61,7 @@ class PushPullGossiper(override val name: String,
     val neighbor = nbs(rnd.nextInt(neighbors.size))
     val (msg, state) = makePushMessage(gossiper)
     neighbor ! msg
-    log.debug(s"sends a push message to ${sender.toString}")
+    log.info(s"${self.toString} sends a PUSH message to ${sender.toString}")
     state.bumpRound()
   }
 

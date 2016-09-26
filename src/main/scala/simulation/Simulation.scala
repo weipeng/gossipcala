@@ -41,12 +41,6 @@ object Simulation {
                             "Graph Mean Degree" -> graph.meanDegree.toString,
                             "Graph Index" -> graph.index.toString)
 
-    /*val Gossiper = gossipType.toLowerCase match {
-      case "pushpull" => PushPullGossiper 
-      case "weighted" => WeightedGossiper 
-      case _ => throw new Exception("Gossip type not supported")
-    }*/
-
     var flag = false
     (0 until repeatition) foreach { i =>
       if (i % 10 == 0) 
@@ -60,7 +54,7 @@ object Simulation {
             gossipType.toLowerCase match {  
               case "pushpull" => new PushPullGossiper(s"node$id", SingleMeanGossiper(data(id)))
               case "weighted" => new WeightedGossiper(s"node$id", SingleMeanGossiper(data(id)))
-              case _ => throw new Exception("Gossip type not supported")
+              case gt => throw new Exception(s"""Gossip type "${gt.toString}" not supported""")
             }
           ),
           name = id.toString
@@ -98,14 +92,14 @@ object Simulation {
             ReportGenerator(s"${numNodes}_sim_out.csv").record(report)
           }
           system.terminate
-          //Await.ready(system.whenTerminated, 10 seconds)
+          Await.ready(system.whenTerminated, 10 minutes)
         }
       }
     }
   }
 
   def batchSim() {
-    val repeatedTimes = 40
+    val repeatedTimes = 2
     val numNodes = 200
     val dataReader = new DataReader() 
     val data = dataReader.read(s"normal_1000_$numNodes.csv.gz")
