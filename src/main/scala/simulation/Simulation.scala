@@ -39,12 +39,6 @@ object Simulation extends LazyLogging {
       "Graph Mean Degree" -> graph.meanDegree.toString,
       "Graph Index" -> graph.index.toString)
 
-    /*val Gossiper = gossipType.toLowerCase match {
-      case "pushpull" => PushPullGossiper 
-      case "weighted" => WeightedGossiper 
-      case _ => throw new Exception("Gossip type not supported")
-    }*/
-
     def runOnce(round: Int): Future[Unit] = {
       if (round % 10 == 0) logger.info(s"Starting round $round")
 
@@ -56,7 +50,7 @@ object Simulation extends LazyLogging {
             gossipType.toLowerCase match {
               case "pushpull" => new PushPullGossiper(s"node$id", SingleMeanGossiper(data(id)))
               case "weighted" => new WeightedGossiper(s"node$id", SingleMeanGossiper(data(id)))
-              case _ => throw new Exception("Gossip type not supported")
+              case gt => throw new Exception(s"""Gossip type "${gt.toString}" not supported""")
             }
           ),
           name = id.toString
@@ -99,7 +93,7 @@ object Simulation extends LazyLogging {
   }
 
   def batchSim() {
-    val repeatedTimes = 40
+    val repeatedTimes = 2
     val numNodes = 200
     val dataReader = new DataReader() 
     val data = dataReader.read(s"normal_1000_$numNodes.csv.gz")
