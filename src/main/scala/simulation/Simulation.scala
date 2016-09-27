@@ -16,7 +16,7 @@ import util.{DataReader, ReportGenerator, ResultAnalyser}
 
 import scala.collection.immutable.ListMap
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{Await, Future}
+import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.language.postfixOps
 import scala.math.abs
@@ -29,7 +29,9 @@ object Simulation extends LazyLogging {
   def sim(data: DenseVector[Double], 
           graph: Graph,
           gossipType: String,
-          repeatition: Int = 1) {
+          repeatition: Int,
+          round: Int): Future[Unit] = {
+      logger.info(s"Starting round $round")
     val dataMean = mean(data)
     val numNodes = graph.order
     assert(data.size == graph.order)
@@ -38,9 +40,6 @@ object Simulation extends LazyLogging {
       "Graph Type" -> graph.graphType,
       "Graph Mean Degree" -> graph.meanDegree.toString,
       "Graph Index" -> graph.index.toString)
-
-    def runOnce(round: Int): Future[Unit] = {
-      if (round % 10 == 0) logger.info(s"Starting round $round")
 
       val system = ActorSystem("Gossip-" + round)
       val members = graph.nodes map { n =>
@@ -72,8 +71,6 @@ object Simulation extends LazyLogging {
         ReportGenerator(s"${numNodes}_sim_out.csv").record(report)
         system.terminate.map(_ => Unit)
       }
-    }
-    reRun(0, repeatition, runOnce)
   }
 
   private def reRun(round: Int, limit: Int, f: Int => Future[Unit]): Future[Unit] = {
@@ -100,12 +97,18 @@ object Simulation extends LazyLogging {
     val gossipTypes = List("pushpull", "weighted")
 
     gossipTypes.take(1) foreach { gt =>
-      for (param <- 10 to 50 by 5) {
-        for (graphIndex <- 0 until 5) {
-          val graph = GraphFileReader(s"sf_${numNodes}_${param}_${graphIndex}.data.gz").readGraph()
-          sim(data, graph, gt, repeatedTimes)    
-        }
+      val params = for {
+        param <- 10 to 50 by 5
+        graphIndex <- 0 until 5
+      } yield (param, graphIndex)
+
+      val fs = params.toList.map { case (param, graphIndex) =>
+        val graphName = s"sf_${numNodes}_${param}_$graphIndex.data.gz"
+        val graph = GraphFileReader(graphName).readGraph()
+        logger.info(s"start $graphName")
+        reRun(0, repeatedTimes, sim(data, graph, gt, repeatedTimes, _))
       }
+      Future.sequence(fs).map(_ => Unit)
     }
   }
 }

@@ -19,8 +19,8 @@ import scala.math.abs
 
 object Main {
   def main(args: Array[String]) {
-    //Simulation.batchSim()
-    sim()
+    Simulation.batchSim()
+    //sim()
   }
 
   def fileReadTest() = {
