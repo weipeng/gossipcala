@@ -1,6 +1,7 @@
 package actor
 
 import akka.actor.ActorRef
+import akka.event.LoggingReceive
 import gossiper.SingleMeanGossiper
 import message._
 

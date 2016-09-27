@@ -11,6 +11,8 @@
         </encoder>
     </appender>
 
+    <logger name="simulation" level="info"/>
+
     <root level="DEBUG">
         <appender-ref ref="STDOUT" />
         <appender-ref ref="FILE" />

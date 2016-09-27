@@ -1,45 +1,43 @@
 package simulation
 
 import actor.{PushPullGossiper, WeightedGossiper}
-import akka.actor.{ActorSystem, Props}
+import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
 import breeze.linalg.DenseVector
 import breeze.stats._
+import com.typesafe.scalalogging.LazyLogging
 import gossiper._
 import graph.{Graph, GraphFileReader}
 import message._
-import util.{ResultAnalyser, DataReader, ReportGenerator}
-import util.Config.simulation
-
-import scala.collection.immutable.{ListMap, Map}
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
-import scala.concurrent.duration._
-import scala.concurrent.Await
-import scala.language.postfixOps
 import org.scalatest.Assertions._
+import util.Config.simulation
+import util.{DataReader, ReportGenerator, ResultAnalyser}
+
+import scala.collection.immutable.ListMap
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.{Await, Future}
+import scala.concurrent.duration._
+import scala.language.postfixOps
 import scala.math.abs
 
 
-object Simulation {
+object Simulation extends LazyLogging {
+
+  implicit val timeout = Timeout(1 seconds)
 
   def sim(data: DenseVector[Double], 
           graph: Graph,
           gossipType: String,
-          repeatition: Int = 1,
-          verbose: Boolean = false) {
-
-    implicit val timeout = Timeout(1 seconds)
-
+          repeatition: Int = 1) {
     val dataMean = mean(data)
     val numNodes = graph.order
     assert(data.size == graph.order)
 
     val graphInfo = ListMap("Graph Order" -> graph.order.toString,
-                            "Graph Type" -> graph.graphType,
-                            "Graph Mean Degree" -> graph.meanDegree.toString,
-                            "Graph Index" -> graph.index.toString)
+      "Graph Type" -> graph.graphType,
+      "Graph Mean Degree" -> graph.meanDegree.toString,
+      "Graph Index" -> graph.index.toString)
 
     /*val Gossiper = gossipType.toLowerCase match {
       case "pushpull" => PushPullGossiper 
@@ -47,17 +45,15 @@ object Simulation {
       case _ => throw new Exception("Gossip type not supported")
     }*/
 
-    var flag = false
-    (0 until repeatition) foreach { i =>
-      if (i % 10 == 0) 
-        println(s"Starting round $i")
+    def runOnce(round: Int): Future[Unit] = {
+      if (round % 10 == 0) logger.info(s"Starting round $round")
 
-      val system = ActorSystem("Gossip-" + i)
+      val system = ActorSystem("Gossip-" + round)
       val members = graph.nodes map { n =>
         val id = n.id
         id -> system.actorOf(
-          Props( 
-            gossipType.toLowerCase match {  
+          Props(
+            gossipType.toLowerCase match {
               case "pushpull" => new PushPullGossiper(s"node$id", SingleMeanGossiper(data(id)))
               case "weighted" => new WeightedGossiper(s"node$id", SingleMeanGossiper(data(id)))
               case _ => throw new Exception("Gossip type not supported")
@@ -71,36 +67,34 @@ object Simulation {
         members(node.id) ! InitMessage(node.links map (n => n.name -> members(n.id)) toMap)
       }
 
-      flag = false
       members.values.foreach { m => m ! StartMessage }
-      while (!flag) {
-        Thread.sleep(simulation.checkStateTimeout)
 
-        val futures = members.values.toList map { m =>
-          (m ? CheckState).mapTo[NodeState]
-        }
-        val futureList = Future.sequence(futures)
-        futureList map { results =>
-          flag = results.forall(_.status == GossiperStatus.COMPLETE)
-          if (verbose) {
-            results.foreach(r => println(r.nodeName + ": " + abs(r.estimate / dataMean - 1)))
-          }
-        }
-
-        if (flag) { 
-          futureList map { nodeStates =>
-            val rawReport = ResultAnalyser(dataMean, graph.order, nodeStates).analyse()
-            val report = graphInfo ++ rawReport ++ 
-                         ListMap("Sim Counter" -> (i + repeatition * graph.index).toString, 
-                                 "Gossip Type" -> gossipType)
-            if (verbose) 
-              println(report)
-            ReportGenerator(s"${numNodes}_sim_out.csv").record(report)
-          }
-          system.terminate
-          //Await.ready(system.whenTerminated, 10 seconds)
-        }
+      checkState(members.values.toList)(r => r.nodeName + ": " + abs(r.estimate / dataMean - 1)).flatMap {results =>
+        val rawReport = ResultAnalyser(dataMean, graph.order, results).analyse()
+        val report = graphInfo ++ rawReport ++
+          ListMap("Sim Counter" -> (round + repeatition * graph.index).toString,
+            "Gossip Type" -> gossipType)
+        logger.trace(report.toString)
+        ReportGenerator(s"${numNodes}_sim_out.csv").record(report)
+        system.terminate.map(_ => Unit)
       }
+    }
+    reRun(0, repeatition, runOnce)
+  }
+
+  private def reRun(round: Int, limit: Int, f: Int => Future[Unit]): Future[Unit] = {
+    if (round >= limit) Future.successful(Unit) else f(round).flatMap(_ => reRun(round + 1, limit, f))
+  }
+
+  private def checkState(nodes: List[ActorRef])(log: NodeState => String): Future[List[NodeState]] = {
+    Thread.sleep(simulation.checkStateTimeout)
+    val futures = nodes map { m =>
+      (m ? CheckState).mapTo[NodeState]
+    }
+    Future.sequence(futures) flatMap { results =>
+      results.foreach{r => logger.trace(log(r))}
+      val completed = results.forall(_.status == GossiperStatus.COMPLETE)
+      if (completed) Future.successful(results) else checkState(nodes)(log)
     }
   }
 
