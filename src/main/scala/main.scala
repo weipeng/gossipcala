@@ -1,4 +1,4 @@
-import actor.PushPullGossiper
+import actor.{PushPullGossiper, PushSumGossiper}
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
@@ -18,9 +18,9 @@ import scala.math.abs
 
 
 object Main {
-  def main(args: Array[String]): Unit = {
-    Simulation.batchSim()
-    //sim()
+  def main(args: Array[String]) {
+    //Simulation.batchSim()
+    sim()
   }
 
   def fileReadTest() = {
@@ -43,7 +43,7 @@ object Main {
     val dataSum = data.sum
     val dataMean = dataSum / numNodes
     val members = (0 until numNodes).map { i =>
-        system.actorOf(Props(new PushPullGossiper(s"node$i", SingleMeanGossiper(data(i)))), name = "node" + i)
+        system.actorOf(Props(new PushSumGossiper(s"node$i", SingleMeanGossiper(data(i)))), name = "node" + i)
     }.toList
 
     members(0) ! InitMessage(Map("node1" -> members(1), "node2" -> members(2)))
