@@ -17,13 +17,13 @@ case class ResultAnalyser(dataMean: Double, graphOrder: Int, nodeStates: List[No
     val messages = DenseVector.zeros[Double](graphOrder)
     val wastedRounds = DenseVector.zeros[Double](graphOrder)
     val errors = DenseVector.zeros[Double](graphOrder)
-    val effectiveRounds = rounds - wastedRounds
     for ((n, i) <- nodeStates.zipWithIndex) {
       rounds(i) = n.roundCount
-      wastedRnds(i) = n.wastedRoundCount
+      wastedRounds(i) = n.wastedRoundCount
       messages(i) = n.messageCount
       errors(i) = n.estimate / dataMean - 1
     }
+    val effectiveRounds = rounds - wastedRounds
 
     ListMap(
       "Mean L1-absolute Error" -> mean(abs(errors)).toString,

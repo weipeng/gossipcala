@@ -27,6 +27,7 @@ object Simulation extends LazyLogging {
   implicit val timeout = Timeout(1 seconds)
 
   def sim(data: DenseVector[Double], 
+          dataFileName: String,
           graph: Graph,
           gossipType: String,
           repeatition: Int,
@@ -68,7 +69,7 @@ object Simulation extends LazyLogging {
           ListMap("Sim Counter" -> (round + repeatition * graph.index).toString,
             "Gossip Type" -> gossipType)
         logger.trace(report.toString)
-        ReportGenerator(s"${numNodes}_sim_out.csv").record(report)
+        ReportGenerator(s"${numNodes}_sim_out_${dataFileName}.csv").record(report)
         system.terminate.map(_ => Unit)
       }
   }
@@ -93,7 +94,8 @@ object Simulation extends LazyLogging {
     val repeatedTimes = 2
     val numNodes = 200
     val dataReader = new DataReader() 
-    val data = dataReader.read(s"normal_1000_$numNodes.csv.gz")
+    val dataFileName = "normal_1000"
+    val data = dataReader.read(s"${dataFileName}_$numNodes.csv.gz")
     val gossipTypes = List("pushpull", "weighted")
 
     gossipTypes.take(1) foreach { gt =>
@@ -106,7 +108,7 @@ object Simulation extends LazyLogging {
         val graphName = s"sf_${numNodes}_${param}_$graphIndex.data.gz"
         val graph = GraphFileReader(graphName).readGraph()
         logger.info(s"start $graphName")
-        reRun(0, repeatedTimes, sim(data, graph, gt, repeatedTimes, _))
+        reRun(0, repeatedTimes, sim(data, dataFileName, graph, gt, repeatedTimes, _))
       }
       Future.sequence(fs).map(_ => Unit)
     }
