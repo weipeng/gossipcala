@@ -15,8 +15,9 @@ case class ResultAnalyser(dataMean: Double, graphOrder: Int, nodeStates: List[No
   def analyse(): Map[String, String] = {
     val rounds = DenseVector.zeros[Double](graphOrder)
     val messages = DenseVector.zeros[Double](graphOrder)
-    val wastedRnds = DenseVector.zeros[Double](graphOrder)
+    val wastedRounds = DenseVector.zeros[Double](graphOrder)
     val errors = DenseVector.zeros[Double](graphOrder)
+    val effectiveRounds = rounds - wastedRounds
     for ((n, i) <- nodeStates.zipWithIndex) {
       rounds(i) = n.roundCount
       wastedRnds(i) = n.wastedRoundCount
@@ -31,8 +32,10 @@ case class ResultAnalyser(dataMean: Double, graphOrder: Int, nodeStates: List[No
       "Var L2 Error" -> variance(pow(errors, 2)).toString,
       "Mean Rounds" -> mean(rounds).toString,
       "Var Rounds" -> variance(rounds).toString,
-      "Mean Wasted Rounds" -> mean(wastedRnds).toString,
-      "Var Wasted Rounds" -> variance(wastedRnds).toString,
+      "Mean Effective Rounds" -> mean(effectiveRounds).toString,
+      "Var Effective Rounds" -> variance(effectiveRounds).toString,
+      "Mean Wasted Rounds" -> mean(wastedRounds).toString,
+      "Var Wasted Rounds" -> variance(wastedRounds).toString,
       "Mean Messages" -> mean(messages).toString,
       "Var Messages" -> variance(messages).toString
     )
