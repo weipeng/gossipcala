@@ -43,7 +43,8 @@ case class JsonGraph(graph: JsonGraphProperty,
                      directed: Boolean,
                      multigraph: Boolean,
                      order: Int,
-                     index: Int) {
+                     index: Int,
+                     meanSharedNeighbors: Double) {
   def toGraph(): Graph = {
     val SFPattern = ".*barabasi_albert_graph.*".r
     val SWPattern = ".*watts_strogatz_graph.*".r 
@@ -68,6 +69,6 @@ case class JsonGraph(graph: JsonGraphProperty,
       case _ => ""
     }
 
-    Graph(graph.name, graphType, multigraph, directed, linkedNodeMap.values.toList, order, index)
+    Graph(graph.name, graphType, multigraph, directed, linkedNodeMap.values.toList, order, index, meanSharedNeighbors)
   }
 }

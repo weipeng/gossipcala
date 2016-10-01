@@ -12,7 +12,8 @@ case class Graph(name: String,
                  directed: Boolean, 
                  nodes: List[Node],
                  order: Int,
-                 index: Int) {
+                 index: Int,
+                 meanSharedNeighbors: Double) {
 
   def degrees: Array[Double] = nodes.map(_.links.size.toDouble).toArray
   def meanDegree: Double = mean(new DenseVector(degrees))
@@ -23,8 +24,8 @@ case class Graph(name: String,
 }
 
 case class Node(id: Int, links: List[Node]) {
-  def name: String = Node.prefix + ": " + id
-  override def toString(): String = s"Node($id, ${links.map(_.id).sorted})"
+  def name: String = s"${Node.prefix}: $id"
+  override def toString(): String = s"${Node.prefix}($id, ${links.map(_.id).sorted})"
 }
 
 object Node {

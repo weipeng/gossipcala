@@ -18,6 +18,14 @@ for graph_type in ['sf', 'sw']:
                     data['order'] = G.order()
                     data['mean_degree'] = np.mean(G.degree().values())
                     data['var_degree'] = np.var(G.degree().values())
+                    
+                    nodes = G.nodes()
+                    shared_nbs_count = []
+                    for k, node_i in enumerate(nodes):
+                        for node_j in nodes[k+1:]:
+                            shared_nbs_count.append(sum(1 for _ in nx.common_neighbors(G, node_i, node_j)))                         
+                    data['meanSharedNeighbors'] = np.mean(shared_nbs_count)
+
                     jdata = dumps(data)
                     with gzip.open('../graphs/sf_%d_%d_%d.data.gz'% (num_nodes, p, i), 'wb') as f:
                         f.write(jdata)
@@ -34,6 +42,14 @@ for graph_type in ['sf', 'sw']:
                     data['order'] = G.order()
                     data['mean_degree'] = np.mean(G.degree().values())
                     data['var_degree'] = np.var(G.degree().values())
+                    
+                    nodes = G.nodes()
+                    shared_nbs_count = []
+                    for k, node_i in enumerate(nodes):
+                        for node_j in nodes[k+1:]:
+                            shared_nbs_count.append(sum(1 for _ in nx.common_neighbors(G, node_i, node_j)))                         
+                    data['meanSharedNeighbors'] = np.mean(shared_nbs_count)
+
                     jdata = dumps(data)
                     with gzip.open('../graphs/sw_%d_%d_%d.data.gz'% (num_nodes, p, i), 'wb') as f:
                         f.write(jdata)
