@@ -10,6 +10,7 @@ import breeze.linalg._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.language.postfixOps
+import scala.math.abs
 
 
 class PushSumGossiper(override val name: String,
@@ -28,7 +29,10 @@ class PushSumGossiper(override val name: String,
 
     case PushSumMessage(value) =>
       if (sender == self) {
-        val newState = if (mailbox.size > 0) updateGossiper(gossiper, value).compareData
+        val newState = if (mailbox.size > 0) {
+                         mailbox.append(value)
+                         updateGossiper(gossiper, value).compareData
+                       }
                        else gossiper.copy(data = value).compareData
         
         if (newState.toStop) {
@@ -84,8 +88,11 @@ class PushSumGossiper(override val name: String,
 
   def updateGossiper(gossiper: SingleMeanGossiper, 
                      value: DenseVector[Double]): SingleMeanGossiper = {
-    mailbox.append(value)
-    val gossiperCopy = gossiper.copy(data = sum(mailbox))
+    val data = sum(mailbox)
+    val isWasted = gossiper.isWasted(gossiper.data(1) / gossiper.data(0))
+    val wasteQuantity = if (isWasted) 1 else 0
+    val gossiperCopy = gossiper.copy(data = sum(mailbox), 
+                                     wastedRoundCount = gossiper.wastedRoundCount + wasteQuantity)
     mailbox = new ListBuffer()
     gossiperCopy
   }
