@@ -7,6 +7,9 @@ import message._
 import scala.collection.mutable.ListBuffer
 import scala.util.Random
 import breeze.linalg._
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
+import scala.language.postfixOps
 
 
 class PushSumGossiper(override val name: String,
@@ -26,17 +29,18 @@ class PushSumGossiper(override val name: String,
     case PushSumMessage(value) =>
       if (sender == self) {
         val newState = if (mailbox.size > 0) updateGossiper(gossiper, value).compareData
-                       else gossiper.copy(data = value)
-
+                       else gossiper.copy(data = value).compareData
+        
         if (newState.toStop) {
           self ! StopMessage
         } else {
-          mailbox.append(value)
-          self ! PushSignal
+          context.system.scheduler.scheduleOnce(100 milliseconds) {
+            self ! PushSignal
+          }
         }
         context become work(neighbors, newState)
       } else {
-        //log.info(s"${self.toString} receives a PUSH message from ${sender.toString}")
+        //log.info(s"${self.toString} receives a PUSH message from ${sender.toString} ${value}")
         mailbox.append(value)
         context become work(neighbors, gossiper)
       }
@@ -71,7 +75,6 @@ class PushSumGossiper(override val name: String,
     val neighbor = nbs(rnd.nextInt(neighbors.size))
     val (msg, state) = makePushMessage(gossiper)
     neighbor ! msg
-    //log.info(s"${self.toString} receives a PUSH message from ${sender.toString}")
     self ! msg 
     state.bumpRound()
   }
@@ -81,6 +84,7 @@ class PushSumGossiper(override val name: String,
 
   def updateGossiper(gossiper: SingleMeanGossiper, 
                      value: DenseVector[Double]): SingleMeanGossiper = {
+    mailbox.append(value)
     val gossiperCopy = gossiper.copy(data = sum(mailbox))
     mailbox = new ListBuffer()
     gossiperCopy
