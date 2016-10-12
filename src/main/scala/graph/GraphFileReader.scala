@@ -14,7 +14,7 @@ case class GraphFileReader(fileName: String) extends LazyLogging {
 
   def readGraph(): Graph = parseJson(read())
 
-  private def parseJson(json: String): Graph = {
+  def parseJson(json: String): Graph = {
     logger.info("parsing json data")
     implicit val formats = DefaultFormats
     parse(json).extractOpt[JsonGraph] match {

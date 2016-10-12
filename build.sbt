@@ -18,7 +18,8 @@ libraryDependencies ++= Seq(
   "ch.qos.logback" % "logback-classic" % "1.1.7",
   "com.github.tototoshi" %% "scala-csv" % "1.3.3",
   "org.scalactic" %% "scalactic" % "3.0.0",
-  "org.scalatest" %% "scalatest" % "3.0.0"
+  "org.scalatest" %% "scalatest" % "3.0.0",
+  "com.chuusai" %% "shapeless" % "2.3.1"
 )
 
 val resolvers = Seq(

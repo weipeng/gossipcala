@@ -1,15 +1,13 @@
-import actor.{PushPullGossiper, PushSumGossiper}
-import akka.actor.{ActorRef, ActorSystem, Props}
+import actor.PushSumGossiper
+import akka.actor.{ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
 import gossiper._
-import graph.GraphFileReader
+import graph.{JsonGraph, Node, Graph, GraphFileReader}
 import message._
-import simulation.Simulation
-import util.{ReportGenerator, ResultAnalyser}
+import report.ResultAnalyser
 
 import scala.collection.immutable.Map
-import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -40,6 +38,8 @@ object Main {
 
     val numNodes = 4
     val data = Array[Double](233, 21, 53, 402)
+
+    val simpleGraph = GraphFileReader("dummy").parseJson(graphTemplate)
     val dataSum = data.sum
     val dataMean = dataSum / numNodes
     val members = (0 until numNodes).map { i =>
@@ -75,12 +75,16 @@ object Main {
 
       if (flag) {
         futureList map { nodeStates =>
-          val rawReport = ResultAnalyser(dataMean, numNodes, nodeStates).analyse()
-          println(rawReport)
+          val report = ResultAnalyser(dataMean, nodeStates, 1, "unknown", simpleGraph).analyse()
+          println(report.printString)
           nodeStates.foreach(println)
         }
         system.terminate
       }
     }
+  }
+
+  def graphTemplate: String = {
+    """{"directed":false,"index":0,"links":[{"source":0,"target":1},{"source":0,"target":2},{"source":1,"target":3}],"multigraph":false,"graph":{"name":"test_simple_graph"},"meanSharedNeighbors":-1,"var_degree":-1,"mean_degree":-1,"nodes":[{"id":0},{"id":1},{"id":2},{"id":3}],"order":4}"""
   }
 }

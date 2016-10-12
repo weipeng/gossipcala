@@ -11,10 +11,10 @@ import gossiper._
 import graph.{Graph, GraphFileReader}
 import message._
 import org.scalatest.Assertions._
+import report.{ReportGenerator, ResultAnalyser}
 import util.Config.simulation
-import util.{DataReader, ReportGenerator, ResultAnalyser}
+import util.DataReader
 
-import scala.collection.immutable.ListMap
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -36,11 +36,6 @@ object Simulation extends LazyLogging {
     val dataMean = mean(data)
     val numNodes = graph.order
     assert(data.size == graph.order)
-
-    val graphInfo = ListMap("Graph Order" -> graph.order.toString,
-      "Graph Type" -> graph.graphType,
-      "Graph Mean Degree" -> graph.meanDegree.toString,
-      "Graph Index" -> graph.index.toString)
 
       val system = ActorSystem("Gossip-" + round)
       val members = graph.nodes map { n =>
@@ -64,12 +59,11 @@ object Simulation extends LazyLogging {
       members.values.foreach { m => m ! StartMessage }
 
       checkState(members.values.toList)(r => r.nodeName + ": " + abs(r.estimate / dataMean - 1)).flatMap {results =>
-        val rawReport = ResultAnalyser(dataMean, graph.order, results).analyse()
-        val report = graphInfo ++ rawReport ++
-          ListMap("Sim Counter" -> (round + repeatition * graph.index).toString,
-            "Gossip Type" -> gossipType)
-        logger.trace(report.toString)
-        ReportGenerator(s"${numNodes}_sim_out_${dataFileName}.csv").record(report)
+        val simCount = round + repeatition * graph.index
+        val report = ResultAnalyser(dataMean, results, simCount, gossipType, graph).analyse()
+
+        logger.trace(report.printString)
+        ReportGenerator(s"${numNodes}_sim_out_${dataFileName}.csv").record(List(report))
         system.terminate.map(_ => Unit)
       }
   }
