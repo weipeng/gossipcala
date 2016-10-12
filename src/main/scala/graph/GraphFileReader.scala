@@ -66,7 +66,7 @@ case class JsonGraph(graph: JsonGraphProperty,
     val graphType = graph.name match {
       case SFPattern() => "SF"
       case SWPattern() => "SW"
-      case _ => ""
+      case _ => "Unknown"
     }
 
     Graph(graph.name, graphType, multigraph, directed, linkedNodeMap.values.toList, order, index, meanSharedNeighbors)

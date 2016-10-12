@@ -26,12 +26,20 @@ object Simulation extends LazyLogging {
 
   implicit val timeout = Timeout(1 seconds)
 
-  def sim(data: DenseVector[Double], 
-          dataFileName: String,
-          graph: Graph,
-          gossipType: String,
-          repeatition: Int,
-          round: Int): Future[Unit] = {
+  def simWithRepetition(repeatTimes: Int,
+                        data: DenseVector[Double],
+                        dataFileName: String,
+                        graph: Graph,
+                        gossipType: GossipType.Value): Future[Unit] = {
+    reRun(0, repeatTimes, sim(data, dataFileName, graph, gossipType, repeatTimes, _))
+  }
+
+  private def sim(data: DenseVector[Double],
+                  dataFileName: String,
+                  graph: Graph,
+                  gossipType: GossipType.Value,
+                  repeatition: Int,
+                  round: Int): Future[Unit] = {
       logger.info(s"Starting round $round")
     val dataMean = mean(data)
     val numNodes = graph.order
@@ -42,9 +50,9 @@ object Simulation extends LazyLogging {
         val id = n.id
         id -> system.actorOf(
           Props(
-            gossipType.toLowerCase match {
-              case "pushpull" => new PushPullGossiper(s"node$id", SingleMeanGossiper(data(id)))
-              case "weighted" => new WeightedGossiper(s"node$id", SingleMeanGossiper(data(id)))
+            gossipType match {
+              case GossipType.PUSHPULL => new PushPullGossiper(s"node$id", SingleMeanGossiper(data(id)))
+              case GossipType.WEIGHTED => new WeightedGossiper(s"node$id", SingleMeanGossiper(data(id)))
               case gt => throw new Exception(s"""Gossip type "${gt.toString}" not supported""")
             }
           ),
@@ -62,6 +70,8 @@ object Simulation extends LazyLogging {
         val simCount = round + repeatition * graph.index
         val report = ResultAnalyser(dataMean, results, simCount, gossipType, graph).analyse()
 
+        logger.trace("dataMean => " + dataMean)
+        logger.trace("mean estimate =>" + mean(results.map(_.estimate)))
         logger.trace(report.printString)
         ReportGenerator(s"${numNodes}_sim_out_${dataFileName}.csv").record(List(report))
         system.terminate.map(_ => Unit)
@@ -90,9 +100,8 @@ object Simulation extends LazyLogging {
     val dataReader = new DataReader() 
     val dataFileName = "normal_1000"
     val data = dataReader.read(s"${dataFileName}_$numNodes.csv.gz")
-    val gossipTypes = List("pushpull", "weighted")
 
-    gossipTypes.take(1) foreach { gt =>
+    GossipType.values.take(1) foreach { gt =>
       val params = for {
         param <- 10 to 50 by 5
         graphIndex <- 0 until 5
@@ -102,7 +111,7 @@ object Simulation extends LazyLogging {
         val graphName = s"sf_${numNodes}_${param}_$graphIndex.data.gz"
         val graph = GraphFileReader(graphName).readGraph()
         logger.info(s"start $graphName")
-        reRun(0, repeatedTimes, sim(data, dataFileName, graph, gt, repeatedTimes, _))
+        simWithRepetition(repeatedTimes, data, dataFileName, graph, gt)
       }
       Future.sequence(fs).map(_ => Unit)
     }

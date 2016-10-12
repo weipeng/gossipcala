@@ -3,6 +3,7 @@ package report
 import breeze.linalg.DenseVector
 import breeze.numerics._
 import breeze.stats.{mean, variance}
+import gossiper.GossipType
 import graph.Graph
 import message.NodeState
 
@@ -13,7 +14,7 @@ import message.NodeState
 case class ResultAnalyser(dataMean: Double,
                           nodeStates: List[NodeState],
                           simCounter: Int,
-                          gossipType: String,
+                          gossipType: GossipType.Value,
                           graph: Graph) {
   def analyse(): Report = {
     val graphOrder = graph.order

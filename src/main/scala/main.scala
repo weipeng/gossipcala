@@ -1,18 +1,12 @@
-import actor.PushSumGossiper
-import akka.actor.{ActorSystem, Props}
-import akka.pattern.ask
+import akka.actor.ActorSystem
 import akka.util.Timeout
+import breeze.linalg.DenseVector
 import gossiper._
-import graph.{JsonGraph, Node, Graph, GraphFileReader}
-import message._
-import report.ResultAnalyser
+import graph.GraphFileReader
+import simulation.Simulation
 
-import scala.collection.immutable.Map
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.language.postfixOps
-import scala.math.abs
 
 
 object Main {
@@ -34,54 +28,11 @@ object Main {
   def sim() {
     implicit val timeout = Timeout(1 seconds)
 
-    val system = ActorSystem("Gossip")
-
-    val numNodes = 4
     val data = Array[Double](233, 21, 53, 402)
 
     val simpleGraph = GraphFileReader("dummy").parseJson(graphTemplate)
-    val dataSum = data.sum
-    val dataMean = dataSum / numNodes
-    val members = (0 until numNodes).map { i =>
-        system.actorOf(Props(new PushSumGossiper(s"node$i", SingleMeanGossiper(data(i)))), name = "node" + i)
-    }.toList
 
-    members(0) ! InitMessage(Map("node1" -> members(1), "node2" -> members(2)))
-    members(1) ! InitMessage(Map("node0" -> members(0), "node3" -> members(3)))
-    members(2) ! InitMessage(Map("node0" -> members(0)))
-    members(3) ! InitMessage(Map("node1" -> members(1)))
-
-    members.foreach { m => m ! StartMessage }
-
-    var flag = false
-    while (!flag) {
-      Thread.sleep(200)
-
-      val futures = members map { m =>
-        (m ? CheckState).mapTo[NodeState]
-      }
-      val futureList = Future.sequence(futures)
-      futureList map { x =>
-        flag = x.forall(_.status == GossiperStatus.COMPLETE)
-      }
-
-      futureList map { x =>
-        println(x + "AAAAAAAAAAAAAAAAAAH " + flag)
-        for ((m, i) <- members.zipWithIndex) {
-          println(m.path.name + " " + abs(x(i).estimate / dataMean - 1))
-        }
-        println("Average " + dataMean)
-      }
-
-      if (flag) {
-        futureList map { nodeStates =>
-          val report = ResultAnalyser(dataMean, nodeStates, 1, "unknown", simpleGraph).analyse()
-          println(report.printString)
-          nodeStates.foreach(println)
-        }
-        system.terminate
-      }
-    }
+    Simulation.simWithRepetition(2, DenseVector(data), "dummy", simpleGraph, GossipType.PUSHPULL)
   }
 
   def graphTemplate: String = {

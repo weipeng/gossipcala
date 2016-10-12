@@ -1,5 +1,6 @@
 package report
 
+import gossiper.GossipType
 import shapeless._
 import shapeless.record._
 import shapeless.ops.record._
@@ -13,7 +14,7 @@ case class Report(graphOrder: Int,
                   graphMeanDegree: Double,
                   graphIndex: Int,
                   simCounter: Int,
-                  gossipType: String,
+                  gossipType: GossipType.Value,
                   meanL1AbsoluteError: Double,
                   varL1AbsoluteError: Double,
                   meanL2Error: Double,
