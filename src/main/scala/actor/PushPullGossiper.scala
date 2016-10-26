@@ -1,7 +1,6 @@
 package actor
 
-import akka.actor.ActorRef
-import akka.event.LoggingReceive
+import akka.actor.{ActorLogging, ActorRef}
 import gossiper.SingleMeanGossiper
 import message._
 
@@ -9,21 +8,24 @@ import scala.util.Random
 
 
 class PushPullGossiper(override val name: String,
-                       override val gossiper: SingleMeanGossiper) extends GossiperActorTrait[Double, SingleMeanGossiper] {
+                       override val gossiper: SingleMeanGossiper) extends GossiperActorTrait[Double, SingleMeanGossiper] with ActorLogging{
 
   lazy val rnd = new Random(System.currentTimeMillis)
 
-  override def work(neighbors: Map[String, ActorRef], gossiper: SingleMeanGossiper): Receive = LoggingReceive {
+  override def work(neighbors: Map[String, ActorRef], gossiper: SingleMeanGossiper): Receive = {
     case InitMessage(neighbors) =>
       context become work(neighbors, gossiper)
 
     case PushMessage(value) =>
       val (msg, state) = makePullMessage(gossiper)
       sender ! msg
-      context become work(neighbors, state.bumpRound.update(value))
+      val newState = state.bumpRound.update(value)
+      log.debug(s"$name receive push $value, reply ${GossiperActorTrait.extractName(sender)} with ${msg.data} and update to ${newState.data(1)}")
+      context become work(neighbors, newState)
 
     case PullMessage(value) =>
       val newState = gossiper.update(value).compareData()
+      log.debug(s"$name receive pull $value from ${GossiperActorTrait.extractName(sender)} and update to ${newState.data(1)}")
       if (newState.toStop()) {
         self ! StopMessage
         context become work(neighbors, newState)
@@ -57,6 +59,7 @@ class PushPullGossiper(override val name: String,
     val neighbor = nbs(rnd.nextInt(neighbors.size))
     val (msg, state) = makePushMessage(gossiper)
     neighbor ! msg
+    log.debug(s"$name push ${GossiperActorTrait.extractName(neighbor)} with ${msg.data}")
     state.bumpRound()
   }
 

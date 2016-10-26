@@ -17,3 +17,7 @@ trait GossiperActorTrait[T, A <: AggregateGossiper[T]] extends Actor {
   override def receive: Receive = work(Map.empty, gossiper)
   def work(neighbors: Map[String, ActorRef], gossiper: A): Receive
 }
+
+object GossiperActorTrait{
+  def extractName(actor: ActorRef) = actor.path.toString.split("/").last
+}
