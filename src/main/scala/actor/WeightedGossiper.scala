@@ -6,9 +6,10 @@ import gossiper.SingleMeanGossiper
 import message._
 
 import scala.collection.mutable.ListBuffer
+import scala.concurrent.duration._
 import scala.language.postfixOps
 
-
+// todo: broken system....
 class WeightedGossiper(override val name: String,
                        override val gossiper: SingleMeanGossiper) extends GossiperActorTrait[Double, SingleMeanGossiper] {
 
@@ -16,17 +17,17 @@ class WeightedGossiper(override val name: String,
   var mailbox: ListBuffer[DenseVector[Double]] = new ListBuffer()
   var nextRndMailbox: ListBuffer[DenseVector[Double]] = new ListBuffer()
 
-  override def work(neighbors: Map[String, ActorRef], gossiper: SingleMeanGossiper): Receive = {
+  override def work(inValidState: Boolean, neighbors: Map[String, ActorRef], gossiper: SingleMeanGossiper): Receive = common(gossiper) orElse {
     case InitMessage(nbs) =>
       val neighbors = nbs + (name -> self)
       setDiffuseMatrix(neighbors)
-      context become work(neighbors, gossiper.bumpRound())
+      context become work(inValidState, neighbors, gossiper.bumpRound())
 
-    case StartMessage =>
-      context become work(neighbors, gossip(neighbors, gossiper))
+    case StartMessage(_) =>
+      context become work(inValidState, neighbors, gossip(neighbors.values.head, gossiper, false))
 
     case PushSignal =>
-      context become work(neighbors, gossip(neighbors, gossiper))
+      context become work(inValidState, neighbors, gossip(neighbors.values.head, gossiper, false))
 
     case WeightedPushMessage(_data, _rounds) =>
       /*if (_rounds == rounds+1) {
@@ -39,33 +40,22 @@ class WeightedGossiper(override val name: String,
       if (mailbox.size == neighbors.size) {
         val newState = gossiper.copy(data = mailbox.fold(DenseVector(0.0, 0.0))((x, y) => x + y)).compareData()
         if (newState.toStop()) {
-          context become work(neighbors, newState)
+          context become work(inValidState, neighbors, newState)
           self ! StopMessage
         } else {
           mailbox = nextRndMailbox
           nextRndMailbox = new ListBuffer()
-          context become work(neighbors, newState.bumpRound())
+          context become work(inValidState, neighbors, newState.bumpRound())
           self ! PushSignal
         }
       }
 
     case StopMessage =>
-      context become work(neighbors, gossip(neighbors, gossiper.wrap()))
-
-    case KillMessage =>
-      context.stop(self)
-
-    case CheckState =>
-      sender ! NodeState(name,
-        gossiper.status,
-        gossiper.roundCount,
-        gossiper.wastedRoundCount,
-        gossiper.messageCount,
-        gossiper.estimate())
+      context become work(inValidState, neighbors, gossip(neighbors.values.head, gossiper.wrap(), false))
 
   }
 
-  override def gossip(neighbors: Map[String, ActorRef], gossiper: SingleMeanGossiper): SingleMeanGossiper = {
+  override def gossip(target: ActorRef, gossiper: SingleMeanGossiper, isResend: Boolean): SingleMeanGossiper = {
     for ((k, v) <- diffuseMat.iterator) {
       k ! WeightedPushMessage(gossiper.data * v, gossiper.roundCount)
     }
@@ -76,4 +66,6 @@ class WeightedGossiper(override val name: String,
     val numNeighbors = nbs.size
     diffuseMat = nbs.valuesIterator.map(_ -> 1.0 / numNeighbors) toMap
   }
+
+  override def waitTime = (rnd.nextInt(10) * 10) millis
 }

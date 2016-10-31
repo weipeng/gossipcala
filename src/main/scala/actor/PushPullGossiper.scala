@@ -4,64 +4,73 @@ import akka.actor.{ActorLogging, ActorRef}
 import gossiper.SingleMeanGossiper
 import message._
 
-import scala.util.Random
-
+import scala.concurrent.duration._
+import scala.language.postfixOps
 
 class PushPullGossiper(override val name: String,
-                       override val gossiper: SingleMeanGossiper) extends GossiperActorTrait[Double, SingleMeanGossiper] with ActorLogging{
+                       override val gossiper: SingleMeanGossiper)
+  extends GossiperActorTrait[Double, SingleMeanGossiper] with ActorLogging {
 
-  lazy val rnd = new Random(System.currentTimeMillis)
-
-  override def work(neighbors: Map[String, ActorRef], gossiper: SingleMeanGossiper): Receive = {
+  override def work(inValidState: Boolean, neighbors: Map[String, ActorRef], gossiper: SingleMeanGossiper): Receive = common(gossiper) orElse {
     case InitMessage(neighbors) =>
-      context become work(neighbors, gossiper)
+      context become work(inValidState, neighbors, gossiper)
 
     case PushMessage(value) =>
-      val (msg, state) = makePullMessage(gossiper)
-      sender ! msg
-      val newState = state.bumpRound.update(value)
-      log.debug(s"$name receive push $value, reply ${GossiperActorTrait.extractName(sender)} with ${msg.data} and update to ${newState.data(1)}")
-      context become work(neighbors, newState)
+      if (inValidState) {
+        val (msg, state) = makePullMessage(gossiper)
+        sender ! msg
+        val newState = state.bumpRound.update(value)
+        log.debug(s"$name receive push $value, reply ${GossiperActorTrait.extractName(sender)} with ${msg.data} and update to ${newState.data(1)}")
+        context become work(inValidState, neighbors, newState)
+      } else {
+        log.debug(s"$name is in InvalidState when ${GossiperActorTrait.extractName(sender)} request")
+        sender ! InvalidState
+      }
 
     case PullMessage(value) =>
       val newState = gossiper.update(value).compareData()
       log.debug(s"$name receive pull $value from ${GossiperActorTrait.extractName(sender)} and update to ${newState.data(1)}")
+      context become work(true, neighbors, newState)
       if (newState.toStop()) {
         self ! StopMessage
-        context become work(neighbors, newState)
       } else {
-        context become work(neighbors, gossip(neighbors, newState))
+        sendSelf(StartMessage(None), false)
       }
 
+    case InvalidState =>
+      context become work(true, neighbors, gossiper)
+      val nextTarget = nextNeighbour(neighbors, Some(sender()))
+      sendSelf(StartMessage(Some(nextTarget)), true)
+
     case StopMessage =>
-      context become work(neighbors, gossiper.wrap())
+      log.debug(s"$name stopped")
+      context become work(inValidState, neighbors, gossiper.wrap())
 
-    case StartMessage =>
-      context become work(neighbors, gossip(neighbors, gossiper))
-
-    case KillMessage =>
-      context.stop(self)
-
-    case CheckState =>
-      sender ! NodeState(name,
-        gossiper.status,
-        gossiper.roundCount,
-        gossiper.wastedRoundCount,
-        gossiper.messageCount,
-        gossiper.estimate())
+    case StartMessage(t) =>
+      val target = t.getOrElse(nextNeighbour(neighbors, None))
+      context become work(false, neighbors, gossip(target, gossiper, t.isDefined))
 
     case msg =>
       println(s"Unexpected message $msg received")
   }
 
-  override def gossip(neighbors: Map[String, ActorRef], gossiper: SingleMeanGossiper): SingleMeanGossiper = {
-    val nbs = neighbors.values.toArray
-    val neighbor = nbs(rnd.nextInt(neighbors.size))
-    val (msg, state) = makePushMessage(gossiper)
-    neighbor ! msg
-    log.debug(s"$name push ${GossiperActorTrait.extractName(neighbor)} with ${msg.data}")
-    state.bumpRound()
+  private def nextNeighbour(neighbors: Map[String, ActorRef], banNeighbor: Option[ActorRef]): ActorRef = {
+    val eligibleNeighbours = (neighbors.values.toSet -- banNeighbor).toArray[ActorRef]
+    (banNeighbor, eligibleNeighbours) match {
+      case (Some(n), Array()) => n
+      case _ => eligibleNeighbours(rnd.nextInt(eligibleNeighbours.length))
+    }
   }
+
+  override def gossip(target: ActorRef, gossiper: SingleMeanGossiper, isResend: Boolean): SingleMeanGossiper = {
+    val (msg, state) = makePushMessage(gossiper)
+    target ! msg
+    log.debug(s"$name push ${GossiperActorTrait.extractName(target)} with ${msg.data}")
+    if (isResend) state.bumpInvalidMessage()
+    else state.bumpRound()
+  }
+
+  override def waitTime = (rnd.nextInt(10) * 10) millis
 
   private def makePushMessage(gossiper: SingleMeanGossiper): (PushMessage, SingleMeanGossiper) =
     (PushMessage(gossiper.data(1)), gossiper.bumpMessage())

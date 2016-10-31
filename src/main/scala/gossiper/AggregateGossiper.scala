@@ -2,15 +2,17 @@ package gossiper
 
 import breeze.linalg.DenseVector
 
-trait AggregateGossiper[T] {
-  val data: DenseVector[T]
+trait AggregateGossiper {
+  type Data = Double
+  val data: DenseVector[Data]
   val status: GossiperStatus.Value
   val roundCount: Int
   val wastedRoundCount: Int
+  val invalidMessageCount: Int
   val messageCount: Int
-  def wrap(): AggregateGossiper[T]
+  def wrap(): AggregateGossiper
   def toStop(): Boolean
-  def estimate(): T
-  def compareData(): AggregateGossiper[T]
-  def update(value: T): AggregateGossiper[T]
+  def estimate(): Data
+  def compareData(): AggregateGossiper
+  def update(value: Data): AggregateGossiper
 }

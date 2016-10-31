@@ -2,30 +2,28 @@ package actor
 
 import akka.actor.ActorRef
 import akka.event.Logging
+import breeze.linalg._
 import gossiper.SingleMeanGossiper
 import message._
+
 import scala.collection.mutable.ListBuffer
-import scala.util.Random
-import breeze.linalg._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.language.postfixOps
-import scala.math.abs
 
-
+// todo: broken....
 class PushSumGossiper(override val name: String,
                       override val gossiper: SingleMeanGossiper) extends GossiperActorTrait[Double, SingleMeanGossiper] {
-
-  lazy val rnd = new Random(System.currentTimeMillis)
   lazy val log = Logging(context.system, this)
   var mailbox: ListBuffer[DenseVector[Double]] = new ListBuffer
   val weight = 0.5
 
-  override def work(neighbors: Map[String, ActorRef],   
-                    gossiper: SingleMeanGossiper): Receive = {
+  override def work(inValidState: Boolean,
+                    neighbors: Map[String, ActorRef],
+                    gossiper: SingleMeanGossiper): Receive = common(gossiper) orElse {
 
     case InitMessage(neighbors) =>
-      context become work(neighbors, gossiper)
+      context become work(inValidState, neighbors, gossiper)
 
     case PushSumMessage(value) =>
       if (sender == self) {
@@ -42,43 +40,34 @@ class PushSumGossiper(override val name: String,
             self ! PushSignal
           }
         }
-        context become work(neighbors, newState)
+        context become work(inValidState, neighbors, newState)
       } else {
         //log.info(s"${self.toString} receives a PUSH message from ${sender.toString} ${value}")
         mailbox.append(value)
-        context become work(neighbors, gossiper)
+        context become work(inValidState, neighbors, gossiper)
       }
 
     case PushSignal =>
-      context become work(neighbors, gossip(neighbors, gossiper))
+      context become work(inValidState, neighbors, gossip(neighbors.values.head, gossiper, false))
   
     case StopMessage =>
-      context become work(neighbors, gossiper.wrap())
+      context become work(inValidState, neighbors, gossiper.wrap())
 
-    case StartMessage =>
-      context become work(neighbors, gossip(neighbors, gossiper))
-
-    case KillMessage =>
-      context.stop(self)
-
-    case CheckState =>
-      sender ! NodeState(name,
-        gossiper.status,
-        gossiper.roundCount,
-        gossiper.wastedRoundCount,
-        gossiper.messageCount,
-        gossiper.estimate())
+    case StartMessage(_) =>
+      context become work(inValidState, neighbors, gossip(neighbors.values.head, gossiper, false))
 
     case msg =>
       println(s"Unexpected message $msg received")
   }
 
-  override def gossip(neighbors: Map[String, ActorRef], 
-                      gossiper: SingleMeanGossiper): SingleMeanGossiper = {
-    val nbs = neighbors.values.toArray
-    val neighbor = nbs(rnd.nextInt(neighbors.size))
+  private def nextNeighbour(neighbors: Map[String, ActorRef], banNeighbor: Option[ActorRef]): ActorRef = {
+    val neighbours = neighbors.values.toArray[ActorRef]
+    neighbours(rnd.nextInt(neighbours.length))
+  }
+
+  override def gossip(target: ActorRef, gossiper: SingleMeanGossiper, isResend: Boolean): SingleMeanGossiper = {
     val (msg, state) = makePushMessage(gossiper)
-    neighbor ! msg
+    target ! msg
     self ! msg 
     state.bumpRound()
   }
@@ -96,4 +85,6 @@ class PushSumGossiper(override val name: String,
     mailbox = new ListBuffer()
     gossiperCopy
   }
+
+  override def waitTime = (rnd.nextInt(10) * 10) millis
 }

@@ -64,7 +64,7 @@ object Simulation extends LazyLogging {
         members(node.id) ! InitMessage(node.links map (n => n.name -> members(n.id)) toMap)
       }
 
-      members.values.foreach { m => m ! StartMessage }
+      members.values.foreach { m => m ! StartMessage(None) }
 
       checkState(members.values.toList)(r => r.nodeName + ": " + abs(r.estimate / dataMean - 1)).flatMap {results =>
         val simCount = round + repeatition * graph.index
@@ -88,7 +88,7 @@ object Simulation extends LazyLogging {
       (m ? CheckState).mapTo[NodeState]
     }
     Future.sequence(futures) flatMap { results =>
-      results.foreach{r => logger.trace(log(r))}
+      results.foreach{r => logger.trace(log(r)); logger.trace(r.toString)}
       val completed = results.forall(_.status == GossiperStatus.COMPLETE)
       if (completed) Future.successful(results) else checkState(nodes)(log)
     }
