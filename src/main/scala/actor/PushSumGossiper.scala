@@ -18,12 +18,12 @@ class PushSumGossiper(override val name: String,
   var mailbox: ListBuffer[DenseVector[Double]] = new ListBuffer
   val weight = 0.5
 
-  override def work(inValidState: Boolean,
+  override def work(busyState: Boolean,
                     neighbors: Map[String, ActorRef],
                     gossiper: SingleMeanGossiper): Receive = common(gossiper) orElse {
 
     case InitMessage(neighbors) =>
-      context become work(inValidState, neighbors, gossiper)
+      context become work(busyState, neighbors, gossiper)
 
     case PushSumMessage(value) =>
       if (sender == self) {
@@ -40,21 +40,23 @@ class PushSumGossiper(override val name: String,
             self ! PushSignal
           }
         }
-        context become work(inValidState, neighbors, newState)
+        context become work(busyState, neighbors, newState)
       } else {
         log.info(s"${self.toString} receives a PUSH message from ${sender.toString} ${value}")
         mailbox.append(value)
-        context become work(inValidState, neighbors, gossiper)
+        context become work(busyState, neighbors, gossiper)
       }
 
     case PushSignal =>
-      context become work(inValidState, neighbors, gossip(neighbors.values.head, gossiper, false))
+      val neighbor = nextNeighbour(neighbors, null)
+      context become work(busyState, neighbors, gossip(neighbor, gossiper, false))
   
     case StopMessage =>
-      context become work(inValidState, neighbors, gossiper.wrap())
+      context become work(busyState, neighbors, gossiper.wrap())
 
     case StartMessage(_) =>
-      context become work(inValidState, neighbors, gossip(neighbors.values.head, gossiper, false))
+      val neighbor = nextNeighbour(neighbors, null)
+      context become work(busyState, neighbors, gossip(neighbor, gossiper, false))
 
     case msg =>
       println(s"Unexpected message $msg received")

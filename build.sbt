@@ -19,7 +19,7 @@ libraryDependencies ++= Seq(
   "com.github.tototoshi" %% "scala-csv" % "1.3.3",
   "org.scalactic" %% "scalactic" % "3.0.0",
   "org.scalatest" %% "scalatest" % "3.0.0",
-  "com.chuusai" %% "shapeless" % "2.3.1"
+  "com.chuusai" %% "shapeless" % "2.3.2"
 )
 
 val resolvers = Seq(

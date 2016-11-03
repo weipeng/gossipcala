@@ -18,6 +18,7 @@ case class ResultAnalyser(dataMean: Double,
                           graph: Graph) {
   def analyse(): Report = {
     val graphOrder = graph.order
+    val meanSharedNeighbors = graph.meanSharedNeighbors
     val rounds = DenseVector.zeros[Double](graphOrder)
     val messages = DenseVector.zeros[Double](graphOrder)
     val busyMessages = DenseVector.zeros[Double](graphOrder)
@@ -52,6 +53,8 @@ case class ResultAnalyser(dataMean: Double,
       meanMessages = mean(messages),
       varMessages = variance(messages),
       meanBusyMessages = mean(busyMessages),
-      varBusyMessages = variance(busyMessages))
+      varBusyMessages = variance(busyMessages),
+      meanSharedNeighbors = meanSharedNeighbors
+    )
   }
 }
