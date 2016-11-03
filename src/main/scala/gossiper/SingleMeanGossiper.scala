@@ -9,7 +9,7 @@ case class SingleMeanGossiper private(override val data: DenseVector[Double],
                                       override val status: GossiperStatus.Value,
                                       override val roundCount: Int = 0,
                                       override val wastedRoundCount: Int = 0,
-                                      override val invalidMessageCount: Int = 0,
+                                      override val busyMessageCount: Int = 0,
                                       override val messageCount: Int = 0,
                                       convergenceCount: Int = 0,
                                       lastMetric: Double = 0.0) extends AggregateGossiper {
@@ -43,7 +43,7 @@ case class SingleMeanGossiper private(override val data: DenseVector[Double],
 
   def bumpMessage(): SingleMeanGossiper = copy(messageCount = messageCount + 1)
 
-  def bumpInvalidMessage(): SingleMeanGossiper = copy(invalidMessageCount = invalidMessageCount + 1)
+  def bumpBusyMessage(): SingleMeanGossiper = copy(busyMessageCount = busyMessageCount + 1)
 
   def isWasted(value: Double): Boolean = abs(value - data(1) / data(0)) <= wastedRoundThreshold 
 }

@@ -20,14 +20,14 @@ case class ResultAnalyser(dataMean: Double,
     val graphOrder = graph.order
     val rounds = DenseVector.zeros[Double](graphOrder)
     val messages = DenseVector.zeros[Double](graphOrder)
-    val invMessages = DenseVector.zeros[Double](graphOrder)
+    val busyMessages = DenseVector.zeros[Double](graphOrder)
     val wastedRounds = DenseVector.zeros[Double](graphOrder)
     val errors = DenseVector.zeros[Double](graphOrder)
     for ((n, i) <- nodeStates.zipWithIndex) {
       rounds(i) = n.roundCount
       wastedRounds(i) = n.wastedRoundCount
       messages(i) = n.messageCount
-      invMessages(i) = n.invalidMessageCount
+      busyMessages(i) = n.busyMessageCount
       errors(i) = n.estimate / dataMean - 1
     }
     val effectiveRounds = rounds - wastedRounds
@@ -51,7 +51,7 @@ case class ResultAnalyser(dataMean: Double,
       varWastedRounds = mean(messages),
       meanMessages = mean(messages),
       varMessages = variance(messages),
-      meanInvalidMessages = mean(invMessages),
-      varInvalidMessages = variance(invMessages))
+      meanBusyMessages = mean(busyMessages),
+      varBusyMessages = variance(busyMessages))
   }
 }

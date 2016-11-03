@@ -8,7 +8,7 @@ trait AggregateGossiper {
   val status: GossiperStatus.Value
   val roundCount: Int
   val wastedRoundCount: Int
-  val invalidMessageCount: Int
+  val busyMessageCount: Int
   val messageCount: Int
   def wrap(): AggregateGossiper
   def toStop(): Boolean

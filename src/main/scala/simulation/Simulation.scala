@@ -1,6 +1,6 @@
 package simulation
 
-import actor.{PushPullGossiper, WeightedGossiper}
+import actor.{PushPullGossiper, PushSumGossiper, WeightedGossiper}
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
@@ -40,42 +40,42 @@ object Simulation extends LazyLogging {
                   gossipType: GossipType.Value,
                   repeatition: Int,
                   round: Int): Future[Unit] = {
-      logger.info(s"Starting round $round")
+    logger.info(s"Starting round $round")
     val dataMean = mean(data)
     val numNodes = graph.order
     assert(data.size == graph.order)
 
-      val system = ActorSystem("Gossip-" + round)
-      val members = graph.nodes map { n =>
-        val id = n.id
-        id -> system.actorOf(
-          Props(
-            gossipType match {
-              case GossipType.PUSHPULL => new PushPullGossiper(s"node$id", SingleMeanGossiper(data(id)))
-              case GossipType.WEIGHTED => new WeightedGossiper(s"node$id", SingleMeanGossiper(data(id)))
-              case gt => throw new Exception(s"""Gossip type "${gt.toString}" not supported""")
-            }
-          ),
-          name = id.toString
-        )
-      } toMap
+    val system = ActorSystem(s"Gossip-$round")
+    val members = graph.nodes map { n =>
+      val id = n.id
+      id -> system.actorOf(
+        Props(
+          gossipType match {
+            case GossipType.PUSHPULL => new PushPullGossiper(s"node$id", SingleMeanGossiper(data(id)))
+            case GossipType.WEIGHTED => new WeightedGossiper(s"node$id", SingleMeanGossiper(data(id)))
+            case GossipType.PUSHSUM => new PushSumGossiper(s"node$id", SingleMeanGossiper(data(id)))
+            case gt => throw new Exception(s"""Gossip type "${gt.toString}" not supported""")
+        }),
+        name = id.toString
+      )
+    } toMap
 
-      graph.nodes foreach { node =>
-        members(node.id) ! InitMessage(node.links map (n => n.name -> members(n.id)) toMap)
-      }
+    graph.nodes foreach { node =>
+      members(node.id) ! InitMessage(node.links map (n => n.name -> members(n.id)) toMap)
+    }
 
-      members.values.foreach { m => m ! StartMessage(None) }
+    members.values.foreach { m => m ! StartMessage(None) }
 
-      checkState(members.values.toList)(r => r.nodeName + ": " + abs(r.estimate / dataMean - 1)).flatMap {results =>
-        val simCount = round + repeatition * graph.index
-        val report = ResultAnalyser(dataMean, results, simCount, gossipType, graph).analyse()
+    checkState(members.values.toList)(r => r.nodeName + ": " + abs(r.estimate / dataMean - 1)).flatMap {results =>
+      val simCount = round + repeatition * graph.index
+      val report = ResultAnalyser(dataMean, results, simCount, gossipType, graph).analyse()
 
-        logger.trace("dataMean => " + dataMean)
-        logger.trace("mean estimate =>" + mean(results.map(_.estimate)))
-        logger.trace(report.printString)
-        ReportGenerator(s"${numNodes}_sim_out_${dataFileName}.csv").record(List(report))
-        system.terminate.map(_ => Unit)
-      }
+      logger.trace("dataMean => " + dataMean)
+      logger.trace("mean estimate =>" + mean(results.map(_.estimate)))
+      logger.trace(report.printString)
+      ReportGenerator(s"${numNodes}_sim_out_${dataFileName}.csv").record(List(report))
+      system.terminate.map(_ => Unit)
+    }
   }
 
   private def reRun(round: Int, limit: Int, f: Int => Future[Unit]): Future[Unit] = {

@@ -11,20 +11,20 @@ class PushPullGossiper(override val name: String,
                        override val gossiper: SingleMeanGossiper)
   extends GossiperActorTrait[Double, SingleMeanGossiper] with ActorLogging {
 
-  override def work(inValidState: Boolean, neighbors: Map[String, ActorRef], gossiper: SingleMeanGossiper): Receive = common(gossiper) orElse {
+  override def work(busyState: Boolean, neighbors: Map[String, ActorRef], gossiper: SingleMeanGossiper): Receive = common(gossiper) orElse {
     case InitMessage(neighbors) =>
-      context become work(inValidState, neighbors, gossiper)
+      context become work(busyState, neighbors, gossiper)
 
     case PushMessage(value) =>
-      if (inValidState) {
+      if (busyState) {
         val (msg, state) = makePullMessage(gossiper)
         sender ! msg
         val newState = state.bumpRound.update(value)
         log.debug(s"$name receive push $value, reply ${GossiperActorTrait.extractName(sender)} with ${msg.data} and update to ${newState.data(1)}")
-        context become work(inValidState, neighbors, newState)
+        context become work(busyState, neighbors, newState)
       } else {
-        log.debug(s"$name is in InvalidState when ${GossiperActorTrait.extractName(sender)} request")
-        sender ! InvalidState
+        log.debug(s"$name is in BusyState when ${GossiperActorTrait.extractName(sender)} request")
+        sender ! BusyState
       }
 
     case PullMessage(value) =>
@@ -37,14 +37,14 @@ class PushPullGossiper(override val name: String,
         sendSelf(StartMessage(None), false)
       }
 
-    case InvalidState =>
+    case BusyState =>
       context become work(true, neighbors, gossiper)
       val nextTarget = nextNeighbour(neighbors, Some(sender()))
       sendSelf(StartMessage(Some(nextTarget)), true)
 
     case StopMessage =>
       log.debug(s"$name stopped")
-      context become work(inValidState, neighbors, gossiper.wrap())
+      context become work(busyState, neighbors, gossiper.wrap())
 
     case StartMessage(t) =>
       val target = t.getOrElse(nextNeighbour(neighbors, None))
@@ -66,7 +66,7 @@ class PushPullGossiper(override val name: String,
     val (msg, state) = makePushMessage(gossiper)
     target ! msg
     log.debug(s"$name push ${GossiperActorTrait.extractName(target)} with ${msg.data}")
-    if (isResend) state.bumpInvalidMessage()
+    if (isResend) state.bumpBusyMessage()
     else state.bumpRound()
   }
 

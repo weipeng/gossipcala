@@ -29,12 +29,12 @@ trait GossiperActorTrait[T, A <: AggregateGossiper] extends Actor {
         g.roundCount,
         g.wastedRoundCount,
         g.messageCount,
-        g.invalidMessageCount,
+        g.busyMessageCount,
         g.estimate())
   }
 
   override def receive: Receive = work(false, Map.empty, gossiper)
-  def work(inValidState: Boolean, neighbors: Map[String, ActorRef], gossiper: A): Receive
+  def work(busyState: Boolean, neighbors: Map[String, ActorRef], gossiper: A): Receive
 
   protected def waitTime: FiniteDuration
 

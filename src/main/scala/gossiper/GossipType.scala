@@ -6,6 +6,7 @@ package gossiper
   */
 object GossipType extends Enumeration {
   val PUSHPULL,
-      WEIGHTED = Value
+      WEIGHTED,
+      PUSHSUM = Value
 }
 
