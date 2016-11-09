@@ -40,6 +40,7 @@ object Simulation extends LazyLogging {
                   gossipType: GossipType.Value,
                   repeatition: Int,
                   round: Int): Future[Unit] = {
+    
     logger.info(s"Starting round $round")
     val dataMean = mean(data)
     val numNodes = graph.order
@@ -67,12 +68,12 @@ object Simulation extends LazyLogging {
     members.values.foreach { m => m ! StartMessage(None) }
 
     checkState(members.values.toList)(r => r.nodeName + ": " + abs(r.estimate / dataMean - 1)).flatMap {results =>
-      val simCount = round + repeatition * graph.index
-      val report = ResultAnalyser(dataMean, results, simCount, gossipType, graph).analyse()
+      val simCounter = round + repeatition * graph.index
+      val report = ResultAnalyser(dataMean, results, simCounter, gossipType, graph).analyse()
 
-      logger.trace("dataMean => " + dataMean)
-      logger.trace("mean estimate =>" + mean(results.map(_.estimate)))
-      logger.trace(report.printString)
+      //logger.trace("dataMean => " + dataMean)
+      //logger.trace("mean estimate =>" + mean(results.map(_.estimate)))
+      //logger.trace(report.printString)
       ReportGenerator(s"${numNodes}_sim_out_${dataFileName}.csv").record(List(report))
       system.terminate.map(_ => Unit)
     }
@@ -88,14 +89,14 @@ object Simulation extends LazyLogging {
       (m ? CheckState).mapTo[NodeState]
     }
     Future.sequence(futures) flatMap { results =>
-      results.foreach{r => logger.trace(log(r)); logger.trace(r.toString)}
+      //results.foreach{r => logger.trace(log(r)); logger.trace(r.toString)}
       val completed = results.forall(_.status == GossiperStatus.COMPLETE)
       if (completed) Future.successful(results) else checkState(nodes)(log)
     }
   }
 
   def batchSim() {
-    val repeatedTimes = 2
+    val repeatedTimes = 35
     val numNodes = 200
     val dataReader = new DataReader() 
     val dataFileName = "normal_1000"

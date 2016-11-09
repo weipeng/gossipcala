@@ -20,16 +20,16 @@ class PushPullGossiper(override val name: String,
         val (msg, state) = makePullMessage(gossiper)
         sender ! msg
         val newState = state.bumpRound.update(value)
-        log.debug(s"$name receive push $value, reply ${GossiperActorTrait.extractName(sender)} with ${msg.data} and update to ${newState.data(1)}")
+        //log.debug(s"$name receive push $value, reply ${GossiperActorTrait.extractName(sender)} with ${msg.data} and update to ${newState.data(1)}")
         context become work(busyState, neighbors, newState)
       } else {
-        log.debug(s"$name is in BusyState when ${GossiperActorTrait.extractName(sender)} request")
+        //log.debug(s"$name is in BusyState when ${GossiperActorTrait.extractName(sender)} request")
         sender ! BusyState
       }
 
     case PullMessage(value) =>
       val newState = gossiper.update(value).compareData()
-      log.debug(s"$name receive pull $value from ${GossiperActorTrait.extractName(sender)} and update to ${newState.data(1)}")
+      //log.debug(s"$name receive pull $value from ${GossiperActorTrait.extractName(sender)} and update to ${newState.data(1)}")
       context become work(true, neighbors, newState)
       if (newState.toStop()) {
         self ! StopMessage
@@ -43,7 +43,7 @@ class PushPullGossiper(override val name: String,
       sendSelf(StartMessage(Some(nextTarget)), true)
 
     case StopMessage =>
-      log.debug(s"$name stopped")
+      //log.debug(s"$name stopped")
       context become work(busyState, neighbors, gossiper.wrap())
 
     case StartMessage(t) =>
@@ -65,7 +65,7 @@ class PushPullGossiper(override val name: String,
   override def gossip(target: ActorRef, gossiper: SingleMeanGossiper, isResend: Boolean): SingleMeanGossiper = {
     val (msg, state) = makePushMessage(gossiper)
     target ! msg
-    log.debug(s"$name push ${GossiperActorTrait.extractName(target)} with ${msg.data}")
+    //log.debug(s"$name push ${GossiperActorTrait.extractName(target)} with ${msg.data}")
     if (isResend) state.bumpBusyMessage()
     else state.bumpRound()
   }

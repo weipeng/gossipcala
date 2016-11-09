@@ -10,8 +10,8 @@ import scala.language.postfixOps
 
 object Main {
   def main(args: Array[String]) {
-    //Simulation.batchSim()
-    sim2()
+    Simulation.batchSim()
+    //sim2()
   }
 
   def fileReadTest() = {
@@ -43,10 +43,10 @@ object Main {
     val graph: String = {
       """{"directed":false,"index":0,"links":[{"source":0,"target":1}, {"source":0,"target":2}, {"source":1,"target":2}],"multigraph":false,"graph":{"name":"test_simple_graph"},"meanSharedNeighbors":-1,"var_degree":-1,"mean_degree":-1,"nodes":[{"id":0},{"id":1},{"id":2}],"order":3}"""
     }
-    val data = Array[Double](0, 50, 100)
+    val data = Array[Double](-10, 50, 100)
 
     val simpleGraph = GraphFileReader("dummy").parseJson(graph)
 
-    Simulation.simWithRepetition(1, DenseVector(data), "dummy", simpleGraph, GossipType.PUSHSUM)
+    Simulation.simWithRepetition(1, DenseVector(data), "dummy", simpleGraph, GossipType.PUSHPULL)
   }
 }

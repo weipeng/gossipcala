@@ -33,3 +33,7 @@ scalacOptions ++= Seq(
   "-deprecation"
   //"-Ybackend:o3"
 )
+
+fork in run := true
+javaOptions in run += "-Xmx4G"
+
