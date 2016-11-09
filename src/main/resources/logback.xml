@@ -13,6 +13,7 @@
 
     <logger name="simulation" level="trace" />
     <logger name="gossiper" level="trace" />
+    <logger name="actor" level="info" />
 
     <root level="DEBUG">
         <appender-ref ref="STDOUT" />
