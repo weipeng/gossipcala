@@ -38,7 +38,7 @@ object Report {
 
   def createRecord(report: Report): lgr.Repr = lgr.to(report)
 
-  def headers: List[String] = Keys[lgr.Repr].apply.toList.map(_.toString.replaceOnce("'", ""))
+  def headers: List[String] = Keys[lgr.Repr].apply.toList.map(_.toString.substring(1))
 
   def values(report: Report): List[String] = createRecord(report).values.toList.map(_.toString)
 }
