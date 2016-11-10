@@ -16,7 +16,7 @@ import util.Config.simulation
 import util.DataReader
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 import scala.language.postfixOps
 import scala.math.abs
@@ -71,9 +71,9 @@ object Simulation extends LazyLogging {
       val simCounter = round + repeatition * graph.index
       val report = ResultAnalyser(dataMean, results, simCounter, gossipType, graph).analyse()
 
-      //logger.trace("dataMean => " + dataMean)
-      //logger.trace("mean estimate =>" + mean(results.map(_.estimate)))
-      //logger.trace(report.printString)
+      logger.trace("dataMean => " + dataMean)
+      logger.trace("mean estimate =>" + mean(results.map(_.estimate)))
+      logger.trace(report.printString)
       ReportGenerator(s"${numNodes}_sim_out_${dataFileName}.csv").record(List(report))
       system.terminate.map(_ => Unit)
     }
@@ -95,26 +95,28 @@ object Simulation extends LazyLogging {
     }
   }
 
-  def batchSim() {
+  def batchSim(): Unit = {
     val repeatedTimes = 35
     val numNodes = 200
     val dataReader = new DataReader() 
     val dataFileName = "normal_1000"
     val data = dataReader.read(s"${dataFileName}_$numNodes.csv.gz")
 
-    GossipType.values.take(1) foreach { gt =>
-      val params = for {
-        param <- 10 to 50 by 5
-        graphIndex <- 0 until 5
-      } yield (param, graphIndex)
+    val gt = GossipType.PUSHPULL
+    val params = for {
+      param <- 10 to 50 by 5
+      graphIndex <- 0 until 5
+    } yield (param, graphIndex)
 
-      val fs = params.toList.map { case (param, graphIndex) =>
-        val graphName = s"sf_${numNodes}_${param}_$graphIndex.data.gz"
-        val graph = GraphFileReader(graphName).readGraph()
-        logger.info(s"start $graphName")
-        simWithRepetition(repeatedTimes, data, dataFileName, graph, gt)
-      }
-      Future.sequence(fs).map(_ => Unit)
+    val f = params.foldLeft(Future.successful[Unit](Unit)) { (f, param) => f.flatMap { _ =>
+      val p = param._1
+      val graphIndex = param._2
+      val graphName = s"sf_${numNodes}_${p}_$graphIndex.data.gz"
+      val graph = GraphFileReader(graphName).readGraph()
+      logger.info(s"start $graphName")
+      simWithRepetition(repeatedTimes, data, dataFileName, graph, gt)
     }
+    }
+    Await.ready(f, Duration.Inf)
   }
 }
