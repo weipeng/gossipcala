@@ -74,7 +74,7 @@ object Simulation extends LazyLogging {
       logger.trace("dataMean => " + dataMean)
       logger.trace("mean estimate =>" + mean(results.map(_.estimate)))
       logger.trace(report.printString)
-      ReportGenerator(s"${numNodes}_sim_out_${dataFileName}.csv").record(List(report))
+      ReportGenerator(s"${numNodes}_sim_out_${dataFileName}_${gossipType.toString}.csv").record(List(report))
       system.terminate.map(_ => Unit)
     }
   }
@@ -102,20 +102,21 @@ object Simulation extends LazyLogging {
     val dataFileName = "normal_1000"
     val data = dataReader.read(s"${dataFileName}_$numNodes.csv.gz")
 
-    val gt = GossipType.PUSHPULL
+    val gt = GossipType.PUSHSUM
     val params = for {
-      param <- 10 to 50 by 5
-      graphIndex <- 0 until 5
+      param <- 10 to 10 //50 by 5
+      graphIndex <- 0 until 1 //5
     } yield (param, graphIndex)
 
-    val f = params.foldLeft(Future.successful[Unit](Unit)) { (f, param) => f.flatMap { _ =>
-      val p = param._1
-      val graphIndex = param._2
-      val graphName = s"sf_${numNodes}_${p}_$graphIndex.data.gz"
-      val graph = GraphFileReader(graphName).readGraph()
-      logger.info(s"start $graphName")
-      simWithRepetition(repeatedTimes, data, dataFileName, graph, gt)
-    }
+    val f = params.foldLeft(Future.successful[Unit](Unit)) { (f, param) => 
+      f.flatMap { _ =>
+        val p = param._1
+        val graphIndex = param._2
+        val graphName = s"sf_${numNodes}_${p}_$graphIndex.data.gz"
+        val graph = GraphFileReader(graphName).readGraph()
+        logger.info(s"start $graphName")
+        simWithRepetition(repeatedTimes, data, dataFileName, graph, gt)
+      }
     }
     Await.ready(f, Duration.Inf)
   }

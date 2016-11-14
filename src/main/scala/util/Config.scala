@@ -1,5 +1,7 @@
 package util
 
+
+import gossiper.GossipType
 import com.typesafe.config.ConfigFactory
 
 object Config {
@@ -21,6 +23,11 @@ object Config {
   object simulation {
     private lazy val simulationConfig = config.getConfig("simulation")
     lazy val checkStateTimeout = simulationConfig.getInt("check-state-timeout")
+    lazy val gossipType = simulationConfig.getString("gossip-type").toLowerCase  match {  
+      case "pushpull" => GossipType.PUSHPULL
+      case "pushsum" => GossipType.PUSHSUM
+      case "weighted" => GossipType.WEIGHTED
+    }
   }
 }
 

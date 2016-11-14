@@ -6,6 +6,7 @@ import breeze.stats.{mean, variance}
 import gossiper.GossipType
 import graph.Graph
 import message.NodeState
+import util.Config
 
 /**
   * Author: yanyang.wang
@@ -54,7 +55,8 @@ case class ResultAnalyser(dataMean: Double,
       varMessages = variance(messages),
       meanBusyMessages = mean(busyMessages),
       varBusyMessages = variance(busyMessages),
-      meanSharedNeighbors = meanSharedNeighbors
+      meanSharedNeighbors = meanSharedNeighbors,
+      stoppingThreshold = Config.algorithm.stoppingThreshold
     )
   }
 }

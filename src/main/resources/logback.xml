@@ -12,8 +12,8 @@
     </appender>
 
     <logger name="simulation" level="info" />
-    <logger name="gossiper" level="trace" />
-    <logger name="actor" level="info" />
+    <logger name="gossiper" level="off" />
+    <logger name="actor" level="off" />
 
     <root level="DEBUG">
         <appender-ref ref="STDOUT" />

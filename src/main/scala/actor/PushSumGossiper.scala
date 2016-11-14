@@ -10,8 +10,8 @@ import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.language.postfixOps
+import scala.util.Random
 
-// todo: broken....
 class PushSumGossiper(override val name: String,
                       override val gossiper: SingleMeanGossiper) extends GossiperActorTrait[Double, SingleMeanGossiper] {
   lazy val log = Logging(context.system, this)
@@ -29,14 +29,14 @@ class PushSumGossiper(override val name: String,
       if (sender == self) {
         val newState = if (mailbox.size > 0) {
                          mailbox.append(value)
-                         updateGossiper(gossiper, value).compareData
+                         updateGossiper(gossiper).compareData
                        }
                        else gossiper.copy(data = value).compareData
-        
+
         if (newState.toStop) {
           self ! StopMessage
         } else {
-          context.system.scheduler.scheduleOnce(50 milliseconds) {
+          context.system.scheduler.scheduleOnce(100 milliseconds) {
             self ! PushSignal
           }
         }
@@ -77,8 +77,7 @@ class PushSumGossiper(override val name: String,
   private def makePushMessage(gossiper: SingleMeanGossiper): (PushSumMessage, SingleMeanGossiper) =
     (PushSumMessage(gossiper.data * weight), gossiper.bumpMessage())
 
-  def updateGossiper(gossiper: SingleMeanGossiper, 
-                     value: DenseVector[Double]): SingleMeanGossiper = {
+  def updateGossiper(gossiper: SingleMeanGossiper): SingleMeanGossiper = {
     val data = sum(mailbox)
     val isWasted = gossiper.isWasted(gossiper.data(1) / gossiper.data(0))
     val wasteQuantity = if (isWasted) 1 else 0

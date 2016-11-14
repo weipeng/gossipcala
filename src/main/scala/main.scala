@@ -47,6 +47,6 @@ object Main {
 
     val simpleGraph = GraphFileReader("dummy").parseJson(graph)
 
-    Simulation.simWithRepetition(1, DenseVector(data), "dummy", simpleGraph, GossipType.PUSHPULL)
+    Simulation.simWithRepetition(1, DenseVector(data), "dummy", simpleGraph, GossipType.PUSHSUM)
   }
 }

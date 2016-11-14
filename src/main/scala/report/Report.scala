@@ -29,7 +29,8 @@ case class Report(graphOrder: Int,
                   varMessages: Double,
                   meanBusyMessages: Double,
                   varBusyMessages: Double,
-                  meanSharedNeighbors: Double) {
+                  meanSharedNeighbors: Double,
+                  stoppingThreshold: Int) {
   def printString: String = Report.headers.zip(Report.values(this)).map(p => "\t" + p._1 + " => " + p._2).mkString("\n")
 }
 
