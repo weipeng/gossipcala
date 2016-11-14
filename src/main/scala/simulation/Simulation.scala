@@ -102,7 +102,7 @@ object Simulation extends LazyLogging {
     val dataFileName = "normal_1000"
     val data = dataReader.read(s"${dataFileName}_$numNodes.csv.gz")
 
-    val gt = GossipType.PUSHSUM
+    val gt = simulation.gossipType
     val params = for {
       param <- 10 to 10 //50 by 5
       graphIndex <- 0 until 1 //5
