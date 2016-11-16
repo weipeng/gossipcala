@@ -36,7 +36,7 @@ class PushSumGossiper(override val name: String,
         if (newState.toStop) {
           self ! StopMessage
         } else {
-          context.system.scheduler.scheduleOnce(100 milliseconds) {
+          context.system.scheduler.scheduleOnce(50 milliseconds) {
             self ! PushSignal
           }
         }
