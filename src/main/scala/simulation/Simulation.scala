@@ -57,7 +57,7 @@ object Simulation extends LazyLogging {
             case GossipType.PUSHSUM => new PushSumGossiper(s"node$id", SingleMeanGossiper(data(id)))
             case gt => throw new Exception(s"""Gossip type "${gt.toString}" not supported""")
         }),
-        name = id.toString
+        name = n.name
       )
     } toMap
 
@@ -89,7 +89,7 @@ object Simulation extends LazyLogging {
       (m ? CheckState).mapTo[NodeState]
     }
     Future.sequence(futures) flatMap { results =>
-      //results.foreach{r => logger.trace(log(r)); logger.trace(r.toString)}
+      results.foreach{r => logger.trace(log(r)); logger.trace(r.toString)}
       val completed = results.forall(_.status == GossiperStatus.COMPLETE)
       if (completed) Future.successful(results) else checkState(nodes)(log)
     }
