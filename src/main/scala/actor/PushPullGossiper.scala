@@ -4,24 +4,23 @@ import akka.actor.{ActorLogging, ActorRef}
 import gossiper.SingleMeanGossiper
 import message._
 
-import scala.concurrent.duration._
-import scala.language.postfixOps
-
 class PushPullGossiper(override val name: String,
                        override val gossiper: SingleMeanGossiper)
-  extends GossiperActorTrait[Double, SingleMeanGossiper] with ActorLogging {
+  extends GossiperActorTrait[Double, SingleMeanGossiper, PushPullExtraState] with ActorLogging {
 
-  override def work(busyState: Boolean, neighbors: Map[String, ActorRef], gossiper: SingleMeanGossiper): Receive = common(gossiper) orElse {
+  override def work(neighbors: Map[String, ActorRef],
+                    gossiper: SingleMeanGossiper,
+                    ppState: PushPullExtraState): Receive = common(gossiper) orElse {
     case InitMessage(neighbors) =>
-      context become work(busyState, neighbors, gossiper)
+      context become work(neighbors, gossiper, ppState)
 
     case PushMessage(value) =>
-      if (busyState) {
+      if (ppState.busyState) {
         val (msg, state) = makePullMessage(gossiper)
         sender ! msg
         val newState = state.bumpRound.update(value)
         log.debug(s"$name receive push $value, reply ${GossiperActorTrait.extractName(sender)} with ${msg.data} and update to ${newState.data(1)}")
-        context become work(busyState, neighbors, newState)
+        context become work(neighbors, newState, ppState)
       } else {
         log.debug(s"$name is in BusyState when ${GossiperActorTrait.extractName(sender)} request")
         sender ! BusyState
@@ -30,7 +29,7 @@ class PushPullGossiper(override val name: String,
     case PullMessage(value) =>
       val newState = gossiper.update(value).compareData()
       log.debug(s"$name receive pull $value from ${GossiperActorTrait.extractName(sender)} and update to ${newState.data(1)}")
-      context become work(true, neighbors, newState)
+      context become work(neighbors, newState, ppState.copy(busyState = true))
       if (newState.toStop()) {
         self ! StopMessage
       } else {
@@ -38,17 +37,17 @@ class PushPullGossiper(override val name: String,
       }
 
     case BusyState =>
-      context become work(true, neighbors, gossiper)
+      context become work(neighbors, gossiper, ppState.copy(busyState = true))
       val nextTarget = nextNeighbour(neighbors, Some(sender()))
       sendSelf(StartMessage(Some(nextTarget)), true)
 
     case StopMessage =>
       log.debug(s"$name stopped")
-      context become work(busyState, neighbors, gossiper.wrap())
+      context become work(neighbors, gossiper.wrap(), ppState)
 
     case StartMessage(t) =>
       val target = t.getOrElse(nextNeighbour(neighbors, None))
-      context become work(false, neighbors, gossip(target, gossiper, t.isDefined))
+      context become work(neighbors, gossip(target, gossiper, t.isDefined), ppState.copy(busyState = false))
 
     case msg =>
       println(s"Unexpected message $msg received")
@@ -62,7 +61,7 @@ class PushPullGossiper(override val name: String,
     }
   }
 
-  override def gossip(target: ActorRef, gossiper: SingleMeanGossiper, isResend: Boolean): SingleMeanGossiper = {
+  private def gossip(target: ActorRef, gossiper: SingleMeanGossiper, isResend: Boolean): SingleMeanGossiper = {
     val (msg, state) = makePushMessage(gossiper)
     target ! msg
     log.debug(s"$name push ${GossiperActorTrait.extractName(target)} with ${msg.data}")
@@ -70,7 +69,7 @@ class PushPullGossiper(override val name: String,
     else state.bumpRound()
   }
 
-  override def waitTime = (rnd.nextInt(10) * 10) millis
+  override val defaultExtraState = PushPullExtraState(false)
 
   private def makePushMessage(gossiper: SingleMeanGossiper): (PushMessage, SingleMeanGossiper) =
     (PushMessage(gossiper.data(1)), gossiper.bumpMessage())

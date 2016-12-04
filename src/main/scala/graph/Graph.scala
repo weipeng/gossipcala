@@ -24,7 +24,7 @@ case class Graph(name: String,
 }
 
 case class Node(id: Int, links: List[Node]) {
-  def name: String = s"${Node.prefix}: $id"
+  def name: String = s"${Node.prefix}$id"
   override def toString(): String = s"${Node.prefix}($id, ${links.map(_.id).sorted})"
 }
 

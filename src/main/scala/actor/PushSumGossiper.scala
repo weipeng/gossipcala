@@ -10,20 +10,20 @@ import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.language.postfixOps
-import scala.util.Random
 
 class PushSumGossiper(override val name: String,
-                      override val gossiper: SingleMeanGossiper) extends GossiperActorTrait[Double, SingleMeanGossiper] {
+                      override val gossiper: SingleMeanGossiper)
+  extends GossiperActorTrait[Double, SingleMeanGossiper, EmptyState.type] {
   lazy val log = Logging(context.system, this)
   var mailbox: ListBuffer[DenseVector[Double]] = new ListBuffer
   val weight = 0.5
 
-  override def work(busyState: Boolean,
-                    neighbors: Map[String, ActorRef],
-                    gossiper: SingleMeanGossiper): Receive = common(gossiper) orElse {
+  override def work(neighbors: Map[String, ActorRef],
+                    gossiper: SingleMeanGossiper,
+                    extraState: EmptyState.type = EmptyState): Receive = common(gossiper) orElse {
 
     case InitMessage(neighbors) =>
-      context become work(busyState, neighbors, gossiper)
+      context become work(neighbors, gossiper)
 
     case PushSumMessage(value) =>
       if (sender == self) {
@@ -37,26 +37,22 @@ class PushSumGossiper(override val name: String,
           self ! StopMessage
         } else {
           context.system.scheduler.scheduleOnce(50 milliseconds) {
-            self ! PushSignal
+            self ! StartMessage(None)
           }
         }
-        context become work(busyState, neighbors, newState)
+        context become work(neighbors, newState)
       } else {
         log.info(s"${self.toString} receives a PUSH message from ${sender.toString} ${value}")
         mailbox.append(value)
-        context become work(busyState, neighbors, gossiper)
+        context become work(neighbors, gossiper)
       }
-
-    case PushSignal =>
-      val neighbor = nextNeighbour(neighbors, null)
-      context become work(busyState, neighbors, gossip(neighbor, gossiper, false))
   
     case StopMessage =>
-      context become work(busyState, neighbors, gossiper.wrap())
+      context become work(neighbors, gossiper.wrap())
 
     case StartMessage(_) =>
       val neighbor = nextNeighbour(neighbors, null)
-      context become work(busyState, neighbors, gossip(neighbor, gossiper, false))
+      context become work(neighbors, gossip(neighbor, gossiper))
 
     case msg =>
       println(s"Unexpected message $msg received")
@@ -67,10 +63,10 @@ class PushSumGossiper(override val name: String,
     neighbours(rnd.nextInt(neighbours.length))
   }
 
-  override def gossip(target: ActorRef, gossiper: SingleMeanGossiper, isResend: Boolean): SingleMeanGossiper = {
+  private def gossip(target: ActorRef, gossiper: SingleMeanGossiper): SingleMeanGossiper = {
     val (msg, state) = makePushMessage(gossiper)
     target ! msg
-    self ! msg 
+    self ! msg
     state.bumpRound()
   }
 
@@ -78,7 +74,7 @@ class PushSumGossiper(override val name: String,
     (PushSumMessage(gossiper.data * weight), gossiper.bumpMessage())
 
   def updateGossiper(gossiper: SingleMeanGossiper): SingleMeanGossiper = {
-    val data = sum(mailbox)
+    val data = sum(mailbox) //todo <- this is never used?
     val isWasted = gossiper.isWasted(gossiper.data(1) / gossiper.data(0))
     val wasteQuantity = if (isWasted) 1 else 0
     val gossiperCopy = gossiper.copy(data = sum(mailbox), 
@@ -87,5 +83,5 @@ class PushSumGossiper(override val name: String,
     gossiperCopy
   }
 
-  override def waitTime = (rnd.nextInt(10) * 10) millis
+  override val defaultExtraState = EmptyState
 }

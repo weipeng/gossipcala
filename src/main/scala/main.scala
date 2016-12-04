@@ -9,8 +9,9 @@ import scala.language.postfixOps
 
 
 object Main {
-  def main(args: Array[String]) {
-    Simulation.batchSim()
+  def main(args: Array[String]): Unit = {
+    //Simulation.batchSim()
+    sim()
     //sim2()
   }
 
@@ -31,7 +32,7 @@ object Main {
 
     val simpleGraph = GraphFileReader("dummy").parseJson(graphTemplate)
 
-    Simulation.simWithRepetition(2, DenseVector(data), "dummy", simpleGraph, GossipType.PUSHPULL)
+    Simulation.simWithRepetition(1, DenseVector(data), "dummy", simpleGraph, GossipType.PUSHPULL)
   }
 
   def graphTemplate: String = {
