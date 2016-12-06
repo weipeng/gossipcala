@@ -1,13 +1,12 @@
 package actor
 
-import akka.actor.{Props, ActorRef}
+import akka.actor.{ActorRef, Props}
 import akka.event.Logging
 import breeze.linalg._
 import gossiper.SingleMeanGossiper
 import message._
 
 import scala.collection.mutable.ListBuffer
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
@@ -36,9 +35,7 @@ class PushSumGossiper(override val name: String,
         if (newState.toStop) {
           self ! StopMessage
         } else {
-          context.system.scheduler.scheduleOnce(50 milliseconds) {
-            self ! StartMessage(None)
-          }
+          sendSelfWithDelay(StartMessage(None))
         }
         context become work(neighbors, newState)
       } else {
@@ -83,6 +80,7 @@ class PushSumGossiper(override val name: String,
   }
 
   override val defaultExtraState = EmptyState
+  override val waitTime: FiniteDuration = 50 millis
 }
 
 object PushSumGossiper {

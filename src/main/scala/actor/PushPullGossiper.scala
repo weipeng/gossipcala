@@ -33,13 +33,13 @@ class PushPullGossiper(override val name: String,
       if (newState.toStop()) {
         self ! StopMessage
       } else {
-        sendSelf(StartMessage(None), false)
+        self ! StartMessage(None)
       }
 
     case BusyState =>
       context become work(neighbors, gossiper, ppState.copy(busyState = true))
       val nextTarget = nextNeighbour(neighbors, Some(sender()))
-      sendSelf(StartMessage(Some(nextTarget)), true)
+      sendSelfWithDelay(StartMessage(Some(nextTarget)))
 
     case StopMessage =>
       log.debug(s"$name stopped")

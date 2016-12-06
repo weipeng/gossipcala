@@ -5,6 +5,9 @@ import breeze.linalg.DenseVector
 import gossiper.SingleMeanGossiper
 import message._
 
+import scala.concurrent.duration._
+import scala.language.postfixOps
+
 class WeightedGossiper(override val name: String,
                        override val gossiper: SingleMeanGossiper)
   extends GossiperActorTrait[Double, SingleMeanGossiper, WeightExtraState] with ActorLogging {
@@ -24,7 +27,7 @@ class WeightedGossiper(override val name: String,
     case WeightedPushMessage(data, gossiper.roundCount) =>
       log.debug(s"$name in ${gossiper.roundCount} receive $data from ${GossiperActorTrait.extractName(sender)}")
       val mailBoxState = wState.mailbox :+ data
-      if (mailBoxState.size == neighbors.size) {
+      if (sender == self) {
         val newState = gossiper.copy(data = mailBoxState.fold(DenseVector(0.0, 0.0))((x, y) => x + y)).compareData()
         if (newState.toStop()) {
           context become work(neighbors, newState, wState.copy(mailbox = Vector.empty))
@@ -43,13 +46,15 @@ class WeightedGossiper(override val name: String,
 
   private def gossip(gossiper: SingleMeanGossiper, wState: WeightExtraState): SingleMeanGossiper = {
     val diffuseMat = wState.diffuseMatrix
-    diffuseMat.foreach { case (k, v) =>
-      k ! WeightedPushMessage(gossiper.data * v, gossiper.roundCount)
+    diffuseMat.foreach {
+      case (`self`, v) => sendSelfWithDelay(WeightedPushMessage(gossiper.data * v, gossiper.roundCount))
+      case (other, v) => other ! WeightedPushMessage(gossiper.data * v, gossiper.roundCount)
     }
     gossiper.copy(messageCount = gossiper.messageCount + diffuseMat.size)
   }
 
   override val defaultExtraState = WeightExtraState(Map.empty, Vector.empty)
+  override val waitTime: FiniteDuration = 50 millis
 }
 
 object WeightedGossiper {

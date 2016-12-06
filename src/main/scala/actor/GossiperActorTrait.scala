@@ -3,7 +3,7 @@ package actor
 import akka.actor.{Actor, ActorRef}
 import breeze.linalg.DenseVector
 import gossiper.AggregateGossiper
-import message.{CheckState, KillMessage, NodeState}
+import message.{Message, CheckState, KillMessage, NodeState}
 
 import scala.collection.immutable.Map
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -41,10 +41,7 @@ trait GossiperActorTrait[T, A <: AggregateGossiper, E <: ExtraState] extends Act
 
   protected def waitTime: FiniteDuration = (rnd.nextInt(10) * 10) millis
 
-  protected def sendSelf(msg: Any, requireDelay: Boolean) = {
-    if (requireDelay) context.system.scheduler.scheduleOnce(waitTime)(self ! msg)
-    else self ! msg
-  }
+  protected def sendSelfWithDelay(msg: Message): Unit = context.system.scheduler.scheduleOnce(waitTime)(self ! msg)
 }
 
 object GossiperActorTrait{
