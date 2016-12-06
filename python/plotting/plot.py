@@ -1,10 +1,12 @@
 import re
+import gzip
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
 import seaborn as sns
-sns.set_context('talk')
+sns.set_context('poster')
+sns.set(palette='Set1')
 sns.set_style('white')
 
 
@@ -22,65 +24,67 @@ def plot(log, feature):
     plt.show() 
     plt.close()
 
-def plot_sens_analysis(log1, log2, feature):
-    fig = plt.figure(figsize=(3.9, 4.1))
-    ax = fig.add_subplot(111)
-    ax1 = ax.twinx()
-    #plt.rcParams['text.usetex'] = True
+def plot_sens_analysis(gossip_type, num):
+    fig = plt.figure(figsize=(3.4, 3.75))
 
-    df = pd.read_csv(log1)
-    df = df[['stoppingThreshold', 'gossipType', 'simCounter', feature]]
+    log = '../../output/sa/%d_sim_out_normal_100_%s.csv' % (num, gossip_type.upper())    
+    log1 = '../../output/sa/%d_sim_out_normal_1000_%s.csv' % (num, gossip_type.upper())
+    log2 = '../../output/sa/%d_sim_out_normal_10_%s.csv' % (num, gossip_type.upper())
+
+    df0 = pd.read_csv(log)
+    df0['gossipType'] = 'N1'
+
+    df1 = pd.read_csv(log1)
+    df1['gossipType'] = 'N2'        
+
+    df2 = pd.read_csv(log2)
+    df2['gossipType'] = 'YT'
+
+
+    df = df0.append([df1, df2])
+    df = df[['stoppingThreshold', 'gossipType', 'simCounter', 'meanL1AbsoluteError']]
 
     df = df.rename(columns={'stoppingThreshold': 'stopping threshold',
-                            'meanL1AbsoluteError': 'mean L1 absolute error',
+                            'meanL1AbsoluteError': 'MLAPE',
                             'gossipType': 'gossip type'})
-    sns.tsplot(time='stopping threshold', value='mean L1 absolute error',
-                    unit='simCounter', condition='gossip type',
-                    interpolate=True, ax=ax,  
-                    err_style= 'ci_bars', #['ci_band', 'ci_bars', 'unit_traces'], #'unit_points'],
-                    data=df, ci=99, color='black', marker='^')
     
-
-    lgds = [r'$\mathbf{\mathcal{N}(0, 100)}$', r'$\mathbf{\mathcal{N}(0, 1000)}$']
-    lgds = ['low variance', 'high variance']
-
-
+    ax =sns.tsplot(time='stopping threshold', value='MLAPE',
+                   unit='simCounter', condition='gossip type',
+                   interpolate=True,
+                   err_style= 'ci_bars',
+                   data=df, ci=95,
+                   color=['black', 'blue', 'red'])
     
-    df1 = pd.read_csv(log2)
-    df1 = df1[['stoppingThreshold', 'gossipType', 'simCounter', feature]]
-
-    df1 = df1.rename(columns={'stoppingThreshold': 'stopping threshold',
-                              'meanL1AbsoluteError': 'mean L1 absolute error',                            
-                              'gossipType': 'gossip type'})
-
-    sns.tsplot(time='stopping threshold', value='mean L1 absolute error',
-                unit='simCounter', condition='gossip type',
-                #interpolate=True, 
-                err_style= 'ci_band', #['ci_band', 'ci_bars', 'unit_traces'], #'unit_points'],
-                data=df1, ci=99, ax=ax1, color='r')
-    
-    #ax1.lines[-1].set_marker("o")
-    ax1.yaxis.label.set_visible(False)
+    markers = ['^', 'o', '*']
+    for i in xrange(1, 4):
+        i *= -1
+        ax.lines[i].set_marker(markers[i])
 
     handles, labels = ax.get_legend_handles_labels()
-    handles1, labels1 = ax1.get_legend_handles_labels()
-    ax.legend_.remove()
-    ax1.legend_.remove()
-    plt.legend(handles=handles+handles1, labels=lgds, loc=0, prop={'weight': 'bold'})
-    for tl in ax1.get_yticklabels():
-        tl.set_color('r')
+    for i, handle in enumerate(handles):
+        handle.set_marker(markers[i])
 
-    ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0), labelsize=7, useOffset=False)
-    ax1.ticklabel_format(style='sci', axis='y', scilimits=(0,0), labelsize=7, useOffset=False)
-    plt.xlabel(r'stopping threashold $\tau$')
-    plt.title('Push Sum')
+    ax.legend_.remove()
+    plt.legend(handles=handles, labels=labels, loc=0, fontsize=13, frameon=True)
+
+    ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0), labelsize=8, useOffset=False)
+    plt.rc('font', size=9)
+    plt.xlabel(r'Stopping threashold $\tau$')
+
+    gtypes = {
+        'PUSHSUM': 'Push-sum',
+        'PUSHPULL': 'Push-pull',
+        'WEIGHTED': 'Weighted'
+    }
+    gtype = gtypes[gossip_type]
+    plt.title('%s in G(%d)' % (gtype, num), fontsize=14)
     
     plt.tight_layout()
-    plt.savefig('%s.pdf' % log1.rstrip('.csv'), format='pdf')
-
+    plt.savefig('%s-%d.pdf' % (gossip_type, num), format='pdf')
+    #plt.show()
     plt.close()
     
 if __name__ == '__main__':
-    import sys
-    
-    plot_sens_analysis(sys.argv[1], sys.argv[2], 'meanL1AbsoluteError')
+    for gtype in ['PUSHSUM', 'PUSHPULL']:
+        for num in xrange(200, 1001, 200):
+            plot_sens_analysis(gtype, num)
