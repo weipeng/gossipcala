@@ -61,9 +61,10 @@ class PushSumGossiper(override val name: String,
     (PushSumMessage(gossiper.data * weight), gossiper.bumpMessage())
 
   def updateGossiper(gossiper: SingleMeanGossiper, mailbox: scala.Vector[DenseVector[Double]]): SingleMeanGossiper = {
-    val isWasted = gossiper.isWasted(gossiper.data(1) / gossiper.data(0))
+    val newData = sum(mailbox)
+    val isWasted = gossiper.isWasted(newData(1) / newData(0))
     val wasteQuantity = if (isWasted) 1 else 0
-    val gossiperCopy = gossiper.copy(data = sum(mailbox), 
+    val gossiperCopy = gossiper.copy(data = newData, 
                                      wastedRoundCount = gossiper.wastedRoundCount + wasteQuantity)
     gossiperCopy
   }
