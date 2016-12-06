@@ -1,6 +1,6 @@
 package actor
 
-import akka.actor.{ActorLogging, ActorRef}
+import akka.actor.{Props, ActorLogging, ActorRef}
 import gossiper.SingleMeanGossiper
 import message._
 
@@ -76,4 +76,8 @@ class PushPullGossiper(override val name: String,
 
   private def makePullMessage(gossiper: SingleMeanGossiper): (PullMessage, SingleMeanGossiper) =
     (PullMessage(gossiper.data(1)), gossiper.bumpMessage())
+}
+
+object PushPullGossiper {
+  def props(name: String, gossiper: SingleMeanGossiper) = Props(new PushPullGossiper(name, gossiper))
 }

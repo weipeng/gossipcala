@@ -32,7 +32,7 @@ object Main {
 
     val simpleGraph = GraphFileReader("dummy").parseJson(graphTemplate)
 
-    Simulation.simWithRepetition(1, DenseVector(data), "dummy", simpleGraph, GossipType.PUSHPULL)
+    Simulation.simWithRepetition(1, DenseVector(data), "dummy", simpleGraph, GossipType.WEIGHTED)
   }
 
   def graphTemplate: String = {

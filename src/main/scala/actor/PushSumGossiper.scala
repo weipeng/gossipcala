@@ -1,6 +1,6 @@
 package actor
 
-import akka.actor.ActorRef
+import akka.actor.{Props, ActorRef}
 import akka.event.Logging
 import breeze.linalg._
 import gossiper.SingleMeanGossiper
@@ -22,16 +22,16 @@ class PushSumGossiper(override val name: String,
                     gossiper: SingleMeanGossiper,
                     extraState: EmptyState.type = EmptyState): Receive = common(gossiper) orElse {
 
-    case InitMessage(neighbors) =>
-      context become work(neighbors, gossiper)
+    case InitMessage(nbs) =>
+      context become work(nbs, gossiper)
 
     case PushSumMessage(value) =>
       if (sender == self) {
-        val newState = if (mailbox.size > 0) {
+        val newState = if (mailbox.isEmpty) {
                          mailbox.append(value)
-                         updateGossiper(gossiper).compareData
+                         updateGossiper(gossiper).compareData()
                        }
-                       else gossiper.copy(data = value).compareData
+                       else gossiper.copy(data = value).compareData()
 
         if (newState.toStop) {
           self ! StopMessage
@@ -74,7 +74,6 @@ class PushSumGossiper(override val name: String,
     (PushSumMessage(gossiper.data * weight), gossiper.bumpMessage())
 
   def updateGossiper(gossiper: SingleMeanGossiper): SingleMeanGossiper = {
-    val data = sum(mailbox) //todo <- this is never used?
     val isWasted = gossiper.isWasted(gossiper.data(1) / gossiper.data(0))
     val wasteQuantity = if (isWasted) 1 else 0
     val gossiperCopy = gossiper.copy(data = sum(mailbox), 
@@ -84,4 +83,8 @@ class PushSumGossiper(override val name: String,
   }
 
   override val defaultExtraState = EmptyState
+}
+
+object PushSumGossiper {
+  def props(name: String, gossiper: SingleMeanGossiper) = Props(new PushSumGossiper(name, gossiper))
 }
