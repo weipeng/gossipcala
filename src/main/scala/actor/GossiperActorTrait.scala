@@ -55,3 +55,5 @@ final case object EmptyState extends ExtraState
 final case class PushPullExtraState(busyState: Boolean) extends ExtraState
 
 final case class WeightExtraState(diffuseMatrix: Map[ActorRef, Double], mailbox: Vector[DenseVector[Double]]) extends ExtraState
+
+final case class PushSumExtraState(mailBox: Vector[DenseVector[Double]]) extends ExtraState
