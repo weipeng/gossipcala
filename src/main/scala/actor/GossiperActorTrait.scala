@@ -42,6 +42,7 @@ trait GossiperActorTrait[T, A <: AggregateGossiper, E <: ExtraState] extends Act
   protected def waitTime: FiniteDuration = (rnd.nextInt(10) * 10) millis
 
   protected def sendSelfWithDelay(msg: Message): Unit = context.system.scheduler.scheduleOnce(waitTime)(self ! msg)
+
 }
 
 object GossiperActorTrait{

@@ -6,7 +6,7 @@ import message._
 
 class PushPullGossiper(override val name: String,
                        override val gossiper: SingleMeanGossiper)
-  extends GossiperActorTrait[Double, SingleMeanGossiper, PushPullExtraState] with ActorLogging {
+  extends BinaryGossiperTrait[Double, SingleMeanGossiper, PushPullExtraState] with ActorLogging {
 
   override def work(neighbors: Map[String, ActorRef],
                     gossiper: SingleMeanGossiper,
@@ -38,7 +38,7 @@ class PushPullGossiper(override val name: String,
 
     case BusyState =>
       context become work(neighbors, gossiper, ppState.copy(busyState = true))
-      val nextTarget = nextNeighbour(neighbors, Some(sender()))
+      val nextTarget = nextNeighbor(neighbors, Some(sender()))
       sendSelfWithDelay(StartMessage(Some(nextTarget)))
 
     case StopMessage =>
@@ -46,19 +46,11 @@ class PushPullGossiper(override val name: String,
       context become work(neighbors, gossiper.wrap(), ppState)
 
     case StartMessage(t) =>
-      val target = t.getOrElse(nextNeighbour(neighbors, None))
+      val target = t.getOrElse(nextNeighbor(neighbors, None))
       context become work(neighbors, gossip(target, gossiper, t.isDefined), ppState.copy(busyState = false))
 
     case msg =>
       println(s"Unexpected message $msg received")
-  }
-
-  private def nextNeighbour(neighbors: Map[String, ActorRef], banNeighbor: Option[ActorRef]): ActorRef = {
-    val eligibleNeighbours = (neighbors.values.toSet -- banNeighbor).toArray[ActorRef]
-    (banNeighbor, eligibleNeighbours) match {
-      case (Some(n), Array()) => n
-      case _ => eligibleNeighbours(rnd.nextInt(eligibleNeighbours.length))
-    }
   }
 
   private def gossip(target: ActorRef, gossiper: SingleMeanGossiper, isResend: Boolean): SingleMeanGossiper = {

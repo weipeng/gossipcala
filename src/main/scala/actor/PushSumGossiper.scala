@@ -10,7 +10,7 @@ import scala.language.postfixOps
 
 class PushSumGossiper(override val name: String,
                       override val gossiper: SingleMeanGossiper)
-  extends GossiperActorTrait[Double, SingleMeanGossiper, PushSumExtraState] with ActorLogging {
+  extends BinaryGossiperTrait[Double, SingleMeanGossiper, PushSumExtraState] with ActorLogging {
   private val weight = 0.5
 
   override def work(neighbors: Map[String, ActorRef],
@@ -43,16 +43,11 @@ class PushSumGossiper(override val name: String,
       context become work(neighbors, gossiper.wrap(), sumState)
 
     case StartMessage(_) =>
-      val neighbor = nextNeighbour(neighbors, null)
+      val neighbor = nextNeighbor(neighbors, null)
       context become work(neighbors, gossip(neighbor, gossiper), sumState)
 
     case msg =>
       println(s"Unexpected message $msg received")
-  }
-
-  private def nextNeighbour(neighbors: Map[String, ActorRef], banNeighbor: Option[ActorRef]): ActorRef = {
-    val neighbours = neighbors.values.toArray[ActorRef]
-    neighbours(rnd.nextInt(neighbours.length))
   }
 
   private def gossip(target: ActorRef, gossiper: SingleMeanGossiper): SingleMeanGossiper = {
