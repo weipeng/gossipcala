@@ -1,6 +1,7 @@
 rm /tmp/gossipcala.log
 
-for type in "pushsum" "pushpull"
+#for type in "pushsum" "pushpull"
+for type in "weighted"
 do
   echo $type
   for i in {3..30}

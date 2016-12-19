@@ -10,7 +10,7 @@ sns.set(palette='Set1')
 sns.set_style('white')
 
 
-def plot(log, feature):
+def plot(log, feature, show=False):
     df = pd.read_csv(log)
     
     df.reset_index()
@@ -24,12 +24,12 @@ def plot(log, feature):
     plt.show() 
     plt.close()
 
-def plot_sens_analysis(gossip_type, num):
+def plot_sens_analysis(gossip_type, num, show=False):
     fig = plt.figure(figsize=(3.4, 3.75))
 
-    log = '../../output/sa/%d_sim_out_normal_100_%s.csv' % (num, gossip_type.upper())    
-    log1 = '../../output/sa/%d_sim_out_normal_1000_%s.csv' % (num, gossip_type.upper())
-    log2 = '../../output/sa/%d_sim_out_normal_10_%s.csv' % (num, gossip_type.upper())
+    log = '../../output/%d_sim_out_normal_100_%s.csv' % (num, gossip_type.upper())    
+    log1 = '../../output/%d_sim_out_normal_1000_%s.csv' % (num, gossip_type.upper())
+    log2 = '../../output/%d_sim_out_normal_10_%s.csv' % (num, gossip_type.upper())
 
     df0 = pd.read_csv(log)
     df0['gossipType'] = 'N1'
@@ -80,11 +80,15 @@ def plot_sens_analysis(gossip_type, num):
     plt.title('%s in G(%d)' % (gtype, num), fontsize=14)
     
     plt.tight_layout()
-    plt.savefig('%s-%d.pdf' % (gossip_type, num), format='pdf')
-    #plt.show()
+    if show:
+        plt.show()
+    else:
+        plt.savefig('%s-%d.pdf' % (gossip_type, num), format='pdf')
+    
     plt.close()
     
 if __name__ == '__main__':
-    for gtype in ['PUSHSUM', 'PUSHPULL']:
-        for num in xrange(200, 1001, 200):
-            plot_sens_analysis(gtype, num)
+    #for gtype in ['PUSHSUM', 'PUSHPULL']:
+    #    for num in xrange(200, 1001, 200):
+    #        plot_sens_analysis(gtype, num)
+    plot_sens_analysis('WEIGHTED', 200, show=True)
