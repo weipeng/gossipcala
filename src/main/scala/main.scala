@@ -10,8 +10,8 @@ import scala.language.postfixOps
 
 object Main {
   def main(args: Array[String]): Unit = {
-    //Simulation.batchSim()
-    sim()
+    Simulation.batchSim()
+    //sim()
     //sim2()
   }
 

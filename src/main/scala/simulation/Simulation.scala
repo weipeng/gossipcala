@@ -96,7 +96,7 @@ object Simulation extends LazyLogging {
 
   def batchSim(): Unit = {
     val repeatedTimes = 35
-    val numNodes = 200
+    val numNodes = simulation.numNodes
     val dataReader = new DataReader() 
     val dataFileName = "normal_1000"
     val data = dataReader.read(s"${dataFileName}_$numNodes.csv.gz")
