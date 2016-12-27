@@ -7,10 +7,12 @@ import message._
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
+import com.typesafe.scalalogging.LazyLogging
+
 
 class PushSumGossiper(override val name: String,
                       override val gossiper: SingleMeanGossiper)
-  extends BinaryGossiperTrait[Double, SingleMeanGossiper, PushSumExtraState] with ActorLogging {
+  extends BinaryGossiperTrait[Double, SingleMeanGossiper, PushSumExtraState] with ActorLogging with LazyLogging {
   private val weight = 0.5
 
   override def work(neighbors: Map[String, ActorRef],
@@ -23,8 +25,8 @@ class PushSumGossiper(override val name: String,
     case PushSumMessage(value) =>
       val newMailbox = sumState.mailBox :+ value
       if (sender == self) {
-        val newState = if (newMailbox.size == 1) {
-                         updateGossiper(gossiper, newMailbox).compareData()
+        val newState = if (newMailbox.size > 1) {
+                         update(gossiper, newMailbox).compareData()
                        }
                        else gossiper.copy(data = value).compareData()
 
@@ -42,8 +44,8 @@ class PushSumGossiper(override val name: String,
     case StopMessage =>
       context become work(neighbors, gossiper.wrap(), sumState)
 
-    case StartMessage(_) =>
-      val neighbor = nextNeighbor(neighbors, null)
+    case StartMessage(t) =>
+      val neighbor = t.getOrElse(nextNeighbor(neighbors, None))
       context become work(neighbors, gossip(neighbor, gossiper), sumState)
 
     case msg =>
@@ -60,13 +62,13 @@ class PushSumGossiper(override val name: String,
   private def makePushMessage(gossiper: SingleMeanGossiper): (PushSumMessage, SingleMeanGossiper) =
     (PushSumMessage(gossiper.data * weight), gossiper.bumpMessage())
 
-  def updateGossiper(gossiper: SingleMeanGossiper, mailbox: scala.Vector[DenseVector[Double]]): SingleMeanGossiper = {
+  private def update(gossiper: SingleMeanGossiper, mailbox: scala.Vector[DenseVector[Double]]): SingleMeanGossiper = {
     val newData = sum(mailbox)
     val isWasted = gossiper.isWasted(newData(1) / newData(0))
     val wasteQuantity = if (isWasted) 1 else 0
-    val gossiperCopy = gossiper.copy(data = newData, 
-                                     wastedRoundCount = gossiper.wastedRoundCount + wasteQuantity)
-    gossiperCopy
+    if (isWasted) logger.warn(s"${name}+++${gossiper.roundCount}")
+    gossiper.copy(data = newData, 
+                  wastedRoundCount = gossiper.wastedRoundCount + wasteQuantity)
   }
 
   override val defaultExtraState = PushSumExtraState(scala.Vector.empty)

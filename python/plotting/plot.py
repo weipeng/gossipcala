@@ -26,10 +26,11 @@ def plot(log, feature, show=False):
 
 def plot_sens_analysis(gossip_type, num, show=False):
     fig = plt.figure(figsize=(3.4, 3.75))
+    gossip_type = gossip_type.upper()
 
-    log = '../../output/%d_sim_out_normal_100_%s.csv' % (num, gossip_type.upper())    
-    log1 = '../../output/%d_sim_out_normal_1000_%s.csv' % (num, gossip_type.upper())
-    log2 = '../../output/%d_sim_out_normal_10_%s.csv' % (num, gossip_type.upper())
+    log = '../../output/sa/%d_sim_out_normal_1000_%s.csv' % (num, gossip_type.upper())
+    log1 = '../../output/sa/%d_sim_out_normal_100_%s.csv' % (num, gossip_type.upper())    
+    log2 = '../../output/sa/%d_sim_out_normal_10_%s.csv' % (num, gossip_type.upper())
 
     df0 = pd.read_csv(log)
     df0['gossipType'] = 'N1'
@@ -77,7 +78,7 @@ def plot_sens_analysis(gossip_type, num, show=False):
         'WEIGHTED': 'Weighted'
     }
     gtype = gtypes[gossip_type]
-    plt.title('%s in G(%d)' % (gtype, num), fontsize=14)
+    plt.title(r'%s in $G(%d)$' % (gtype, num), fontsize=14)
     
     plt.tight_layout()
     if show:
@@ -88,7 +89,7 @@ def plot_sens_analysis(gossip_type, num, show=False):
     plt.close()
     
 if __name__ == '__main__':
-    #for gtype in ['PUSHSUM', 'PUSHPULL']:
-    #    for num in xrange(200, 1001, 200):
-    #        plot_sens_analysis(gtype, num)
-    plot_sens_analysis('WEIGHTED', 200, show=True)
+    for gtype in ['WEIGHTED', 'PUSHSUM', 'PUSHPULL']:
+        for num in xrange(200, 1001, 200):
+            plot_sens_analysis(gtype, num)
+    #plot_sens_analysis('WEIGHTED', 200, show=True)

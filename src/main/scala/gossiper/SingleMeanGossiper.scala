@@ -45,8 +45,13 @@ case class SingleMeanGossiper private(override val data: DenseVector[Double],
 
   def bumpBusyMessage(): SingleMeanGossiper = copy(busyMessageCount = busyMessageCount + 1)
 
-  def isWasted(value: Double): Boolean = abs(value - data(1) / data(0)) <= wastedRoundThreshold 
+  def isWasted(value: Double): Boolean = abs(value - data(1) / data(0)) <= wastedRoundThreshold * (data(1) / data(0))
   
+  def getWasteThreshold(): Double = wastedRoundThreshold
+
+  def getRound(): Int = roundCount
+
+  def getWastedRound(): Int = wastedRoundCount
 }
 
 object SingleMeanGossiper {

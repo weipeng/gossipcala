@@ -11,9 +11,9 @@
         </encoder>
     </appender>
 
-    <logger name="simulation" level="trace" />
-    <logger name="gossiper" level="trace" />
-    <logger name="actor" level="trace" />
+    <logger name="simulation" level="warn" />
+    <logger name="gossiper" level="warn" />
+    <logger name="actor" level="warn" />
 
     <root level="DEBUG">
         <appender-ref ref="STDOUT" />

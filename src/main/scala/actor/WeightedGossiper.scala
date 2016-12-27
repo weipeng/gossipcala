@@ -1,16 +1,19 @@
 package actor
 
 import akka.actor.{ActorLogging, ActorRef, Props}
-import breeze.linalg.DenseVector
+import breeze.linalg._
 import gossiper.SingleMeanGossiper
 import message._
+import scala.Vector
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
+import com.typesafe.scalalogging.LazyLogging
+
 
 class WeightedGossiper(override val name: String,
                        override val gossiper: SingleMeanGossiper)
-  extends GossiperActorTrait[Double, SingleMeanGossiper, WeightExtraState] with ActorLogging {
+  extends GossiperActorTrait[Double, SingleMeanGossiper, WeightExtraState] with ActorLogging with LazyLogging {
 
   override def work(neighbors: Map[String, ActorRef],
                     gossiper: SingleMeanGossiper,
@@ -30,9 +33,7 @@ class WeightedGossiper(override val name: String,
       log.debug(s"$name in ${gossiper.roundCount} receive $data from ${GossiperActorTrait.extractName(sender)}")
       val mailBoxState = wState.mailbox :+ data
       if (sender == self) {
-        val newState = gossiper.copy(
-          data = mailBoxState.fold(DenseVector(0.0, 0.0))((x, y) => x + y)
-        ).compareData()
+        val newState = update(gossiper, mailBoxState).compareData()
 
         if (newState.toStop()) {
           context become work(neighbors, newState, 
@@ -64,6 +65,16 @@ class WeightedGossiper(override val name: String,
   
     sendSelfWithDelay(WeightedPushMessage(gossiper.data * diffuseMat(self), gossiper.roundCount))
     gossiper.copy(messageCount = gossiper.messageCount + diffuseMat.size)
+  }
+  
+  private def update(gossiper: SingleMeanGossiper, 
+                     mailbox: Vector[DenseVector[Double]]): SingleMeanGossiper = {
+    val data = sum(mailbox)
+    val isWasted = gossiper.isWasted(data(1) / data(0))
+    val wasteQuantity = if (isWasted) 1 else 0
+    if (isWasted) logger.warn(s"${name}+++${gossiper.roundCount}")
+    gossiper.copy(data = data,
+                  wastedRoundCount = gossiper.wastedRoundCount + wasteQuantity)
   }
 
   override val defaultExtraState = WeightExtraState(Map.empty, Vector.empty)

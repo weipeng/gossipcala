@@ -24,6 +24,7 @@ object Config {
     private lazy val simulationConfig = config.getConfig("simulation")
     lazy val checkStateTimeout = simulationConfig.getInt("check-state-timeout")
     lazy val numNodes = simulationConfig.getInt("num-nodes")
+    lazy val dataSource = simulationConfig.getString("data-source")
     lazy val gossipType = simulationConfig.getString("gossip-type").toLowerCase  match {  
       case "pushpull" => GossipType.PUSHPULL
       case "pushsum" => GossipType.PUSHSUM

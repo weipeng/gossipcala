@@ -49,11 +49,12 @@ object Simulation extends LazyLogging {
     val system = ActorSystem(s"Gossip-$round")
     val members = graph.nodes map { n =>
       val id = n.id
+      val name = s"node$id" 
       id -> system.actorOf(
         gossipType match {
-          case GossipType.PUSHPULL => PushPullGossiper.props(s"node$id", SingleMeanGossiper(data(id)))
-          case GossipType.WEIGHTED => WeightedGossiper.props(s"node$id", SingleMeanGossiper(data(id)))
-          case GossipType.PUSHSUM => PushSumGossiper.props(s"node$id", SingleMeanGossiper(data(id)))
+          case GossipType.PUSHPULL => PushPullGossiper.props(name, SingleMeanGossiper(data(id)))
+          case GossipType.WEIGHTED => WeightedGossiper.props(name, SingleMeanGossiper(data(id)))
+          case GossipType.PUSHSUM => PushSumGossiper.props(name, SingleMeanGossiper(data(id)))
           case gt => throw new Exception(s"""Gossip type "${gt.toString}" not supported""")
         },
         name = n.name
@@ -98,13 +99,13 @@ object Simulation extends LazyLogging {
     val repeatedTimes = 35
     val numNodes = simulation.numNodes
     val dataReader = new DataReader() 
-    val dataFileName = "normal_1000"
+    val dataFileName = simulation.dataSource
     val data = dataReader.read(s"${dataFileName}_$numNodes.csv.gz")
 
     val gt = simulation.gossipType
     val params = for {
-      param <- 10 to 10 //50 by 5
-      graphIndex <- 0 until 1 //5
+      param <- 10 to 50 by 5
+      graphIndex <- 0 until 5
     } yield (param, graphIndex)
 
     val f = params.foldLeft(Future.successful[Unit](Unit)) { (f, param) => 

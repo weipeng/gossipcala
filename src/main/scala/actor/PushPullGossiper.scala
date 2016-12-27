@@ -3,10 +3,12 @@ package actor
 import akka.actor.{Props, ActorLogging, ActorRef}
 import gossiper.SingleMeanGossiper
 import message._
+import breeze.numerics.abs
+import com.typesafe.scalalogging.LazyLogging
 
 class PushPullGossiper(override val name: String,
                        override val gossiper: SingleMeanGossiper)
-  extends BinaryGossiperTrait[Double, SingleMeanGossiper, PushPullExtraState] with ActorLogging {
+  extends BinaryGossiperTrait[Double, SingleMeanGossiper, PushPullExtraState] with ActorLogging with LazyLogging {
 
   override def work(neighbors: Map[String, ActorRef],
                     gossiper: SingleMeanGossiper,
@@ -18,7 +20,7 @@ class PushPullGossiper(override val name: String,
       if (ppState.busyState) {
         val (msg, state) = makePullMessage(gossiper)
         sender ! msg
-        val newState = state.bumpRound.update(value)
+        val newState = update(state.bumpRound(), value)
         log.debug(s"$name receive push $value, reply ${GossiperActorTrait.extractName(sender)} with ${msg.data} and update to ${newState.data(1)}")
         context become work(neighbors, newState, ppState)
       } else {
@@ -27,7 +29,7 @@ class PushPullGossiper(override val name: String,
       }
 
     case PullMessage(value) =>
-      val newState = gossiper.update(value).compareData()
+      val newState = update(gossiper, value).compareData()
       log.debug(s"$name receive pull $value from ${GossiperActorTrait.extractName(sender)} and update to ${newState.data(1)}")
       context become work(neighbors, newState, ppState.copy(busyState = true))
       if (newState.toStop()) {
@@ -68,6 +70,16 @@ class PushPullGossiper(override val name: String,
 
   private def makePullMessage(gossiper: SingleMeanGossiper): (PullMessage, SingleMeanGossiper) =
     (PullMessage(gossiper.data(1)), gossiper.bumpMessage())
+
+  private def update(gossiper: SingleMeanGossiper, value: Double): SingleMeanGossiper = {
+    val data = gossiper.data
+    data(1) = (data(1) + value) * 0.5 
+    val wasteQuantity = if (gossiper.isWasted(data(1))) 1 else 0
+    if (wasteQuantity == 1) logger.warn(s"${name}+++${gossiper.roundCount}")
+
+    gossiper.copy(data = data, 
+                  wastedRoundCount = gossiper.wastedRoundCount + wasteQuantity)
+  }
 }
 
 object PushPullGossiper {
