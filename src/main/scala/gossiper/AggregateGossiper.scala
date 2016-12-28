@@ -4,6 +4,7 @@ import breeze.linalg.DenseVector
 
 trait AggregateGossiper {
   type Data = Double
+  val name: String
   val data: DenseVector[Data]
   val status: GossiperStatus.Value
   val roundCount: Int

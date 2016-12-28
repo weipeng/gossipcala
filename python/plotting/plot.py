@@ -10,15 +10,29 @@ sns.set(palette='Set1')
 sns.set_style('white')
 
 
-def plot(log, feature, show=False):
+def plot(gossip_type, num, feature, show=False):
+    fig = plt.figure()
+
+    gtype = gossip_type.upper()
+    log = '../../output/%d_sim_out_normal_10_%s.csv' % (num, gtype)
     df = pd.read_csv(log)
+    print df.columns
     
-    df.reset_index()
-    df[['graphMeanDegree', 'simCounter', 'gossipType', 'meanEffectiveRounds']].to_csv('tmp.csv')
+    if gtype == 'PUSHPULL':
+        df['gossipType'] = 'Push-pull'
+    elif gtype == 'PUSHSUM':
+        df['gossipType'] = 'Push-sum'
+    elif gtype == 'WEIGHTED':
+        df['gossipType'] = 'Sum-weight'
+    else:
+        raise
+    
+    #df.reset_index()
+    df[['graphMeanDegree', 'simCounter', 'gossipType', 'meanRounds']].to_csv('tmp.csv')
+    #df = pd.read_csv('tmp.csv')
     ax = sns.tsplot(time='graphMeanDegree', value=feature,
-                    unit='simCounter', condition='gossipType',
-                    interpolate=True, 
-                    err_style='ci_bars',# 'boot_traces', 'boot_kde', 'unit_traces', 'unit_points'],
+                    unit='simCounter', condition='graphIndex',
+                    interpolate=True, #err_style='ci_bars',
                     data=df)
 
     plt.show() 
@@ -49,12 +63,12 @@ def plot_sens_analysis(gossip_type, num, show=False):
                             'meanL1AbsoluteError': 'MLAPE',
                             'gossipType': 'gossip type'})
     
-    ax =sns.tsplot(time='stopping threshold', value='MLAPE',
-                   unit='simCounter', condition='gossip type',
-                   interpolate=True,
-                   err_style= 'ci_bars',
-                   data=df, ci=95,
-                   color=['black', 'blue', 'red'])
+    ax = sns.tsplot(time='stopping threshold', value='MLAPE',
+                    unit='simCounter', condition='gossip type',
+                    interpolate=True,
+                    err_style='ci_bars',
+                    data=df, ci=95,
+                    color=['black', 'blue', 'red'])
     
     markers = ['^', 'o', '*']
     for i in xrange(1, 4):
@@ -75,7 +89,7 @@ def plot_sens_analysis(gossip_type, num, show=False):
     gtypes = {
         'PUSHSUM': 'Push-sum',
         'PUSHPULL': 'Push-pull',
-        'WEIGHTED': 'Weighted'
+        'WEIGHTED': 'Sum-weight'
     }
     gtype = gtypes[gossip_type]
     plt.title(r'%s in $G(%d)$' % (gtype, num), fontsize=14)
@@ -89,7 +103,7 @@ def plot_sens_analysis(gossip_type, num, show=False):
     plt.close()
     
 if __name__ == '__main__':
-    for gtype in ['WEIGHTED', 'PUSHSUM', 'PUSHPULL']:
-        for num in xrange(200, 1001, 200):
-            plot_sens_analysis(gtype, num)
-    #plot_sens_analysis('WEIGHTED', 200, show=True)
+    #for gtype in ['WEIGHTED', 'PUSHSUM', 'PUSHPULL']:
+    #    for num in xrange(200, 1001, 200):
+    #        plot_sens_analysis(gtype, num)
+    plot('pushsum', 200, 'meanRounds')

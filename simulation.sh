@@ -1,21 +1,21 @@
 rm /tmp/gossipcala.log
 mkdir -p ./output/logs
 
-for num in 200 400 600 800 1000
+for num in 200 400 #600 800 1000
 do 
   for ds in "normal_10" "normal_100" "normal_1000"
   do
-    for type in "weighted" "pushsum" "pushpull"
+    for type in "pushsum" "pushpull" "weighted"
     do
       if [ $type == "weighted" ]
       then 
         i=3
-      elif (( $type == "pushsum" ))
+      elif [ $type == "pushsum" ]
       then 
-        i=3
-      elif (( $type == "pushpull" ))
-      then
         i=24
+      elif [ $type == "pushpull" ]
+      then
+        i=3
       fi 
       echo $type $i
       sbt run "-Dalgorithm.stopping-threshold=$i \

@@ -52,9 +52,9 @@ object Simulation extends LazyLogging {
       val name = s"node$id" 
       id -> system.actorOf(
         gossipType match {
-          case GossipType.PUSHPULL => PushPullGossiper.props(name, SingleMeanGossiper(data(id)))
-          case GossipType.WEIGHTED => WeightedGossiper.props(name, SingleMeanGossiper(data(id)))
-          case GossipType.PUSHSUM => PushSumGossiper.props(name, SingleMeanGossiper(data(id)))
+          case GossipType.PUSHPULL => PushPullGossiper.props(name, SingleMeanGossiper(name, data(id)))
+          case GossipType.WEIGHTED => WeightedGossiper.props(name, SingleMeanGossiper(name, data(id)))
+          case GossipType.PUSHSUM => PushSumGossiper.props(name, SingleMeanGossiper(name, data(id)))
           case gt => throw new Exception(s"""Gossip type "${gt.toString}" not supported""")
         },
         name = n.name

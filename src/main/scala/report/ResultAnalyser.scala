@@ -7,6 +7,7 @@ import gossiper.GossipType
 import graph.Graph
 import message.NodeState
 import util.Config
+import com.typesafe.scalalogging.LazyLogging
 
 /**
   * Author: yanyang.wang
@@ -16,7 +17,7 @@ case class ResultAnalyser(dataMean: Double,
                           nodeStates: List[NodeState],
                           simCounter: Int,
                           gossipType: GossipType.Value,
-                          graph: Graph) {
+                          graph: Graph) extends LazyLogging {
   def analyse(): Report = {
     val graphOrder = graph.order
     val meanSharedNeighbors = graph.meanSharedNeighbors
@@ -31,6 +32,7 @@ case class ResultAnalyser(dataMean: Double,
       messages(i) = n.messageCount
       busyMessages(i) = n.busyMessageCount
       errors(i) = n.estimate / dataMean - 1
+      logger.warn(s"${n.nodeName}===${n.roundCount}")
     }
     val effectiveRounds = rounds - wastedRounds
 

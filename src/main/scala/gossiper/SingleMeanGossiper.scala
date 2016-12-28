@@ -5,7 +5,8 @@ import breeze.numerics._
 import util.Config
 
 
-case class SingleMeanGossiper private(override val data: DenseVector[Double],
+case class SingleMeanGossiper private(override val name: String,
+                                      override val data: DenseVector[Double],
                                       override val status: GossiperStatus.Value,
                                       override val roundCount: Int = 0,
                                       override val wastedRoundCount: Int = 0,
@@ -55,8 +56,9 @@ case class SingleMeanGossiper private(override val data: DenseVector[Double],
 }
 
 object SingleMeanGossiper {
-  def apply(initData: Double): SingleMeanGossiper = {
+  def apply(name: String, initData: Double): SingleMeanGossiper = {
     val raw = SingleMeanGossiper(
+      name,
       DenseVector(1.0, initData),
       GossiperStatus.ACTIVE
     )
