@@ -9,32 +9,43 @@ sns.set_context('poster')
 sns.set(palette='Set1')
 sns.set_style('white')
 
+gtypes = {
+    'PUSHSUM': 'Push-sum',
+    'PUSHPULL': 'Push-pull',
+    'WEIGHTED': 'Sum-weight'
+}
+
+def round2(x):
+    return round(x, 2)
 
 def plot(gossip_type, num, feature, show=False):
     fig = plt.figure()
 
     gtype = gossip_type.upper()
-    log = '../../output/%d_sim_out_normal_10_%s.csv' % (num, gtype)
+    log = '../../output/%d_sim_out_normal_10_%s.csv' % (num, 'PUSHPULL')
+    log1 = '../../output/%d_sim_out_normal_10_%s.csv' % (num, 'PUSHSUM')
+    log2 = '../../output/%d_sim_out_normal_10_%s.csv' % (num, 'WEIGHTED')
     df = pd.read_csv(log)
-    print df.columns
+    df1 = pd.read_csv(log1)
+    df2 = pd.read_csv(log2)
     
-    if gtype == 'PUSHPULL':
-        df['gossipType'] = 'Push-pull'
-    elif gtype == 'PUSHSUM':
-        df['gossipType'] = 'Push-sum'
-    elif gtype == 'WEIGHTED':
-        df['gossipType'] = 'Sum-weight'
-    else:
-        raise
+    df = df.append([df1, df2], ignore_index=True)
+    df['gossipType'] = df['gossipType'].apply(gtypes.get)
+    df['graphMeanDegree'] = df['graphMeanDegree'].apply(round2)
     
+    df.to_csv('tmp1.csv', index=False)
     #df.reset_index()
-    df[['graphMeanDegree', 'simCounter', 'gossipType', 'meanRounds']].to_csv('tmp.csv')
-    #df = pd.read_csv('tmp.csv')
+    #df[['graphMeanDegree', 'simCounter', 'gossipType', 'meanRounds']].to_csv('tmp.csv')
+    #df1 = pd.read_csv('tmp1.csv')
+    #df2 = df2.loc[:, ['graphMeanDegree', 'simCounter', 'gossipType', 'meanRounds']]
+    #data = df2.pivot('simCounter', 'graphMeanDegree', 'meanRounds')
+    #print data
     ax = sns.tsplot(time='graphMeanDegree', value=feature,
-                    unit='simCounter', condition='graphIndex',
+                    unit='simCounter', condition='gossipType',
                     interpolate=True, #err_style='ci_bars',
                     data=df)
 
+    plt.tight_layout()
     plt.show() 
     plt.close()
 
@@ -86,11 +97,6 @@ def plot_sens_analysis(gossip_type, num, show=False):
     plt.rc('font', size=9)
     plt.xlabel(r'Stopping threashold $\tau$')
 
-    gtypes = {
-        'PUSHSUM': 'Push-sum',
-        'PUSHPULL': 'Push-pull',
-        'WEIGHTED': 'Sum-weight'
-    }
     gtype = gtypes[gossip_type]
     plt.title(r'%s in $G(%d)$' % (gtype, num), fontsize=14)
     
@@ -106,4 +112,4 @@ if __name__ == '__main__':
     #for gtype in ['WEIGHTED', 'PUSHSUM', 'PUSHPULL']:
     #    for num in xrange(200, 1001, 200):
     #        plot_sens_analysis(gtype, num)
-    plot('pushsum', 200, 'meanRounds')
+    plot('pushsum', 200, 'meanWastedRounds')
