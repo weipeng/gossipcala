@@ -30,7 +30,7 @@ class WeightedGossiper(override val name: String,
       context become work(neighbors, gossip(gossiper, wState), wState)
 
     case WeightedPushMessage(data, roundCount) =>
-      log.debug(s"$name in ${gossiper.roundCount} receive $data from ${GossiperActorTrait.extractName(sender)}")
+      logger.debug(s"$name in ${gossiper.roundCount} receive $data from ${GossiperActorTrait.extractName(sender)} \n ${gossiper.convergenceCount} ${gossiper.estimate} ${gossiper.lastMetric}")
       val mailBoxState = wState.mailbox :+ data
       if (sender == self) {
         val newState = update(gossiper, mailBoxState).compareData()
@@ -58,7 +58,7 @@ class WeightedGossiper(override val name: String,
     val diffuseMat = wState.diffuseMatrix
     for ((x, v) <- diffuseMat) { 
       if (x != self) {
-        log.debug(s"$name sends to $x")
+        logger.debug(s"$name sends to $x")
         x ! WeightedPushMessage(gossiper.data * v, gossiper.roundCount)
       }
     }

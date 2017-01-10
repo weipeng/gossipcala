@@ -5,9 +5,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
 import seaborn as sns
-sns.set_context('poster')
+sns.set_context('talk')
 sns.set(palette='Set1')
-sns.set_style('white')
 
 gtypes = {
     'PUSHSUM': 'Push-sum',
@@ -18,36 +17,75 @@ gtypes = {
 def round2(x):
     return round(x, 2)
 
-def plot(gossip_type, num, feature, show=False):
-    fig = plt.figure()
+def plot(feature, show=False):
+    #fig = plt.figure(figsize=(8., 4.9))
+    for j in [10, 100, 1000]:
+        fig, axes = plt.subplots(1, 5, figsize=(21., 3.9), sharey=True, dpi=1600)
+        for i, num in enumerate(range(200, 1001, 200)):
+            ax = axes[i]
+            ax.locator_params(nbins=6, axis='x')
+            log = '../../output/%d_sim_out_normal_%d_%s.csv' % (num, j, 'PUSHPULL')
+            log1 = '../../output/%d_sim_out_normal_%d_%s.csv' % (num, j, 'PUSHSUM')
+            log2 = '../../output/%d_sim_out_normal_%d_%s.csv' % (num, j, 'WEIGHTED')
+            df = pd.read_csv(log)
+            df1 = pd.read_csv(log1)
+            df2 = pd.read_csv(log2)
+        
+            df = df.append([df1, df2], ignore_index=True)
 
-    gtype = gossip_type.upper()
-    log = '../../output/%d_sim_out_normal_10_%s.csv' % (num, 'PUSHPULL')
-    log1 = '../../output/%d_sim_out_normal_10_%s.csv' % (num, 'PUSHSUM')
-    log2 = '../../output/%d_sim_out_normal_10_%s.csv' % (num, 'WEIGHTED')
-    df = pd.read_csv(log)
-    df1 = pd.read_csv(log1)
-    df2 = pd.read_csv(log2)
-    
-    df = df.append([df1, df2], ignore_index=True)
-    df['gossipType'] = df['gossipType'].apply(gtypes.get)
-    df['graphMeanDegree'] = df['graphMeanDegree'].apply(round2)
-    
-    df.to_csv('tmp1.csv', index=False)
-    #df.reset_index()
-    #df[['graphMeanDegree', 'simCounter', 'gossipType', 'meanRounds']].to_csv('tmp.csv')
-    #df1 = pd.read_csv('tmp1.csv')
-    #df2 = df2.loc[:, ['graphMeanDegree', 'simCounter', 'gossipType', 'meanRounds']]
-    #data = df2.pivot('simCounter', 'graphMeanDegree', 'meanRounds')
-    #print data
-    ax = sns.tsplot(time='graphMeanDegree', value=feature,
-                    unit='simCounter', condition='gossipType',
-                    interpolate=True, #err_style='ci_bars',
-                    data=df)
+            if j == 10:
+                df['data'] = 'YT'
+            elif j == 100:
+                df['data'] = 'N1'
+            elif j == 1000:
+                df['data'] = 'N2'
 
-    plt.tight_layout()
-    plt.show() 
-    plt.close()
+            #df['simCounter'] = df['simCounter'] % 35
+
+            df['graph order'] = 'G(%d)' % num
+            df['Mean waste rate'] = df['meanWastedRounds'] / df['meanRounds'].astype(float)
+        
+            df['gossipType'] = df['gossipType'].apply(gtypes.get)
+            df['graphMeanDegree'] = df['graphMeanDegree'].round(3)
+            df['graphMeanDegree'] = df['graphMeanDegree'].round(2)
+            df['meanSharedNeighbors'] = df['meanSharedNeighbors'].round(3)
+            df['stdRounds'] = df['varRounds'].apply(np.sqrt)
+          
+            cdict = {'stoppingThreshold': 'stopping threshold',
+                     'meanL1AbsoluteError': 'MLAPE',
+                     'gossipType': 'Gossip type',
+                     'graphMeanDegree': 'Mean degree',
+                     'meanRounds': 'Mean NO. of rounds',
+                     'varRounds': 'Variance of the NO. of the messages',
+                     'meanWastedRounds': 'Mean NO. of waste rounds',
+                     'meanMessages': 'Mean NO. of messages',
+                     'varMessages': 'Variance of the NO. of the messages'}
+
+            if feature != 'Mean waste rate':
+                sns.tsplot(time='graphMeanDegree', value=feature,
+                           unit='simCounter', condition='gossipType',
+                           ci=95, data=df, ax=ax)
+            else:
+                sns.boxplot(x='graphMeanDegree', y='Mean waste rate', 
+                            hue='gossipType', notch=True, data=df, ax=ax,
+                            whis=[5, 95], meanline=True)
+            
+            if i == 0: 
+                ax.set_ylabel(cdict.get(feature, feature))
+            else:
+                ax.set_ylabel('')
+            
+            handles, labels = ax.get_legend_handles_labels()
+            ax.legend_.remove()
+            if i == 4: 
+                plt.legend(handles=handles, labels=labels, loc=1, fontsize=13)
+            ax.set_xlabel('Mean degree')
+
+        plt.tight_layout()
+        f_str = '-'.join(feature.split(' '))
+        plt.savefig('./figures/%d-%s.pdf' % (j, f_str), format='pdf') 
+
+    plt.close('all')
 
 def plot_sens_analysis(gossip_type, num, show=False):
     fig = plt.figure(figsize=(3.4, 3.75))
@@ -74,6 +112,7 @@ def plot_sens_analysis(gossip_type, num, show=False):
                             'meanL1AbsoluteError': 'MLAPE',
                             'gossipType': 'gossip type'})
     
+    sns.set_style('white')
     ax = sns.tsplot(time='stopping threshold', value='MLAPE',
                     unit='simCounter', condition='gossip type',
                     interpolate=True,
@@ -104,7 +143,7 @@ def plot_sens_analysis(gossip_type, num, show=False):
     if show:
         plt.show()
     else:
-        plt.savefig('%s-%d.pdf' % (gossip_type, num), format='pdf')
+        plt.savefig('./figures/sa/%s-%d-%s.pdf' % (gossip_type, num, f_str), format='pdf')
     
     plt.close()
     
@@ -112,4 +151,6 @@ if __name__ == '__main__':
     #for gtype in ['WEIGHTED', 'PUSHSUM', 'PUSHPULL']:
     #    for num in xrange(200, 1001, 200):
     #        plot_sens_analysis(gtype, num)
-    plot('pushsum', 200, 'meanWastedRounds')
+    #plot('Mean waste rate')
+    #plot('meanL1AbsoluteError')
+    plot('meanRounds')
