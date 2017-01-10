@@ -20,7 +20,7 @@ def round2(x):
 def plot(feature, show=False):
     #fig = plt.figure(figsize=(8., 4.9))
     for j in [10, 100, 1000]:
-        fig, axes = plt.subplots(1, 5, figsize=(21., 3.9), sharey=True, dpi=1600)
+        fig, axes = plt.subplots(1, 5, figsize=(21., 3.9), sharey=True, dpi=1200)
         for i, num in enumerate(range(200, 1001, 200)):
             ax = axes[i]
             ax.locator_params(nbins=6, axis='x')
@@ -78,12 +78,13 @@ def plot(feature, show=False):
             handles, labels = ax.get_legend_handles_labels()
             ax.legend_.remove()
             if i == 4: 
-                plt.legend(handles=handles, labels=labels, loc=1, fontsize=13)
+                plt.legend(handles=handles, labels=labels, loc=1, fontsize=14)
             ax.set_xlabel('Mean degree')
+            ax.set_rasterization_zorder(-10)
 
         plt.tight_layout()
         f_str = '-'.join(feature.split(' '))
-        plt.savefig('./figures/%d-%s.pdf' % (j, f_str), format='pdf') 
+        plt.savefig('./figures/%d-%s.pdf' % (j, f_str), dpi=1200) 
 
     plt.close('all')
 
