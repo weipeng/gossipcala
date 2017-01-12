@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
 import seaborn as sns
-sns.set_context('talk')
+sns.set_context('paper')
 sns.set(palette='Set1')
 
 gtypes = {
@@ -24,13 +24,16 @@ def plot(feature, show=False):
         for i, num in enumerate(range(200, 1001, 200)):
             ax = axes[i]
             ax.locator_params(nbins=6, axis='x')
-            log = '../../output/%d_sim_out_normal_%d_%s.csv' % (num, j, 'PUSHPULL')
-            log1 = '../../output/%d_sim_out_normal_%d_%s.csv' % (num, j, 'PUSHSUM')
-            log2 = '../../output/%d_sim_out_normal_%d_%s.csv' % (num, j, 'WEIGHTED')
+            log = '../../output/%d/%d_sim_out_normal_%d_%s.csv' % (j, num, j, 'PUSHPULL')
             df = pd.read_csv(log)
+
+            log1 = '../../output/%d/%d_sim_out_normal_%d_%s.csv' % (j, num, j, 'PUSHSUM')
             df1 = pd.read_csv(log1)
+            #print num, df1[df1['graphMeanDegree'] <= 20]['meanRounds'].mean()
+            log2 = '../../output/%d/%d_sim_out_normal_%d_%s.csv' % (j, num, j, 'WEIGHTED')
             df2 = pd.read_csv(log2)
-        
+            #print 'W', num, df2[df2['graphMeanDegree'] <= 20]['meanRounds'].mean()
+              
             df = df.append([df1, df2], ignore_index=True)
 
             if j == 10:
@@ -61,15 +64,25 @@ def plot(feature, show=False):
                      'meanMessages': 'Mean NO. of messages',
                      'varMessages': 'Variance of the NO. of the messages'}
 
+            if feature == 'meanMessages':
+                df[feature] = df[feature] + df['meanBusyMessages']
+                
             if feature != 'Mean waste rate':
                 sns.tsplot(time='graphMeanDegree', value=feature,
                            unit='simCounter', condition='gossipType',
                            ci=95, data=df, ax=ax)
+                if feature== 'meanMessages':
+                    df['Type'] = df['gossipType'] + ' - effective'
+                    df[feature] = df[feature] - df['meanBusyMessages']
+                    sns.tsplot(time='graphMeanDegree', value=feature,
+                        unit='simCounter', condition='Type', color='yellow',
+                        ci=95, data=df[df['Type'] == 'Push-pull - effective'], ax=ax)
             else:
                 sns.boxplot(x='graphMeanDegree', y='Mean waste rate', 
                             hue='gossipType', notch=True, data=df, ax=ax,
                             whis=[5, 95], meanline=True)
             
+                
             if i == 0: 
                 ax.set_ylabel(cdict.get(feature, feature))
             else:
@@ -77,11 +90,13 @@ def plot(feature, show=False):
             
             handles, labels = ax.get_legend_handles_labels()
             ax.legend_.remove()
-            if i == 4: 
-                plt.legend(handles=handles, labels=labels, loc=1, fontsize=14)
+            #if i == 4: 
+            #     plt.figlegend(handles=handles, labels=labels, loc=0, fontsize=14)
             ax.set_xlabel('Mean degree')
             ax.set_rasterization_zorder(-10)
-
+    
+        plt.figlegend(handles=handles, labels=labels, 
+                      loc=(.75, .92), fontsize=14, ncol=5)
         plt.tight_layout()
         f_str = '-'.join(feature.split(' '))
         plt.savefig('./figures/%d-%s.pdf' % (j, f_str), dpi=1200) 
@@ -131,7 +146,7 @@ def plot_sens_analysis(gossip_type, num, show=False):
         handle.set_marker(markers[i])
 
     ax.legend_.remove()
-    plt.legend(handles=handles, labels=labels, loc=0, fontsize=13, frameon=True)
+    plt.legend(handles=handles, labels=labels, loc=0, fontsize=11.5, frameon=True)
 
     ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0), labelsize=8, useOffset=False)
     plt.rc('font', size=9)
@@ -152,6 +167,7 @@ if __name__ == '__main__':
     #for gtype in ['WEIGHTED', 'PUSHSUM', 'PUSHPULL']:
     #    for num in xrange(200, 1001, 200):
     #        plot_sens_analysis(gtype, num)
-    #plot('Mean waste rate')
-    #plot('meanL1AbsoluteError')
+    plot('Mean waste rate')
+    plot('meanL1AbsoluteError')
     plot('meanRounds')
+    plot('meanMessages')
