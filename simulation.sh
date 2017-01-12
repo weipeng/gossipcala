@@ -1,11 +1,11 @@
 rm /tmp/gossipcala.log
 mkdir -p ./output/logs
 
-for num in 1000 #200 400 #600 800 1000
+for ds in "normal_100" "normal_1000"  # "normal_10" "normal_100" "normal_1000"
 do 
-  for ds in "normal_1000" #"normal_10" "normal_100" "normal_1000"
+  for num in 200 400 800 1000
   do
-    for type in "pushsum" "pushpull" #"weighted"
+    for type in "weighted" #"pushsum" "pushpull"
     do
       if [ $type == "weighted" ]
       then 
@@ -23,7 +23,7 @@ do
                -Dsimulation.num-nodes=$num \
                -Dsimulation.data-source=$ds"
 
-      mv /tmp/gossipcala.log ./output/logs/$num\_$type\_$ds.log
+      #mv /tmp/gossipcala.log ./output/logs/$num\_$type\_$ds.log
     done
   done
 done

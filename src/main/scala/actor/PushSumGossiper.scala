@@ -72,7 +72,7 @@ class PushSumGossiper(override val name: String,
   }
 
   override val defaultExtraState = PushSumExtraState(scala.Vector.empty)
-  override val waitTime: FiniteDuration = 50 millis
+  override val waitTime: FiniteDuration = 25 millis
 }
 
 object PushSumGossiper {

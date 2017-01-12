@@ -78,7 +78,7 @@ class WeightedGossiper(override val name: String,
   }
 
   override val defaultExtraState = WeightExtraState(Map.empty, Vector.empty)
-  override val waitTime: FiniteDuration = 100 millis
+  override val waitTime: FiniteDuration = 50 millis
 }
 
 object WeightedGossiper {
