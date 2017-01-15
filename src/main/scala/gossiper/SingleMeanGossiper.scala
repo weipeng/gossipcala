@@ -47,8 +47,8 @@ case class SingleMeanGossiper private(override val name: String,
   def bumpBusyMessage(): SingleMeanGossiper = copy(busyMessageCount = busyMessageCount + 1)
 
   def isWasted(value: Double): Boolean =
-    (value == data(1)) or \ 
-    (abs(value - data(1) / data(0)) <= wastedRoundThreshold * (data(1) / data(0))) 
+    (value == data(1)) |
+    (abs(value - estimate) <= wastedRoundThreshold * estimate) 
   
   def getWasteThreshold(): Double = wastedRoundThreshold
 
