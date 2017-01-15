@@ -26,6 +26,7 @@ def plot(feature, show=False):
             ax.locator_params(nbins=6, axis='x')
             log = '../../output/%d/%d_sim_out_normal_%d_%s.csv' % (j, num, j, 'PUSHPULL')
             df = pd.read_csv(log)
+            df = pd.DataFrame()
 
             log1 = '../../output/%d/%d_sim_out_normal_%d_%s.csv' % (j, num, j, 'PUSHSUM')
             df1 = pd.read_csv(log1)
@@ -70,13 +71,16 @@ def plot(feature, show=False):
             if feature != 'Mean waste rate':
                 sns.tsplot(time='graphMeanDegree', value=feature,
                            unit='simCounter', condition='gossipType',
-                           ci=95, data=df, ax=ax)
+                           ci=95, data=df, ax=ax, estimator=np.median)
+
                 if feature== 'meanMessages':
                     df['Type'] = df['gossipType'] + ' - effective'
                     df[feature] = df[feature] - df['meanBusyMessages']
                     sns.tsplot(time='graphMeanDegree', value=feature,
-                        unit='simCounter', condition='Type', color='yellow',
-                        ci=95, data=df[df['Type'] == 'Push-pull - effective'], ax=ax)
+                               unit='simCounter', condition='Type', 
+                               color='orange', ci=95, marker='o',
+                               data=df[df['Type'] == 'Push-pull - effective'], 
+                               ax=ax, estimator=np.median)
             else:
                 sns.boxplot(x='graphMeanDegree', y='Mean waste rate', 
                             hue='gossipType', notch=True, data=df, ax=ax,
@@ -84,20 +88,23 @@ def plot(feature, show=False):
             
                 
             if i == 0: 
-                ax.set_ylabel(cdict.get(feature, feature))
+                ax.set_ylabel(cdict.get(feature, feature), fontsize=17)
             else:
                 ax.set_ylabel('')
             
             handles, labels = ax.get_legend_handles_labels()
             ax.legend_.remove()
-            #if i == 4: 
-            #     plt.figlegend(handles=handles, labels=labels, loc=0, fontsize=14)
-            ax.set_xlabel('Mean degree')
+            ax.set_xlabel('Mean degree', fontsize=17)
+            ax.set_title(r'G(%d)' % num, size=17)
             ax.set_rasterization_zorder(-10)
+            
     
+        loc = (.7, .91) if feature != 'meanMessages' else (.556, .91)
         plt.figlegend(handles=handles, labels=labels, 
-                      loc=(.75, .92), fontsize=14, ncol=5)
-        plt.tight_layout()
+                      loc=loc, fontsize=16, ncol=5)
+        plt.tight_layout(pad=1.7, h_pad=2., w_pad=.8)
+        #plt.tight_layout()
+        #plt.subplots_adjust(hspace=1.)
         f_str = '-'.join(feature.split(' '))
         plt.savefig('./figures/%d-%s.pdf' % (j, f_str), dpi=1200) 
 
@@ -146,7 +153,7 @@ def plot_sens_analysis(gossip_type, num, show=False):
         handle.set_marker(markers[i])
 
     ax.legend_.remove()
-    plt.legend(handles=handles, labels=labels, loc=0, fontsize=11.5, frameon=True)
+    plt.legend(handles=handles, labels=labels, loc=0, fontsize=14, frameon=True)
 
     ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0), labelsize=8, useOffset=False)
     plt.rc('font', size=9)

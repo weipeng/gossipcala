@@ -1,11 +1,11 @@
 rm /tmp/gossipcala.log
-mkdir -p ./output/logs
+#mkdir -p ./output/logs
 
-for ds in "normal_100" "normal_1000"  # "normal_10" "normal_100" "normal_1000"
+for ds in "normal_10" "normal_100" "normal_1000"
 do 
-  for num in 200 400 800 1000
+  for num in 200 400 600 800 1000
   do
-    for type in "weighted" #"pushsum" "pushpull"
+    for type in "weighted" "pushsum" "pushpull"
     do
       if [ $type == "weighted" ]
       then 
