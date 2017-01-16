@@ -26,7 +26,7 @@ def plot(feature, show=False):
             ax.locator_params(nbins=6, axis='x')
             log = '../../output/%d/%d_sim_out_normal_%d_%s.csv' % (j, num, j, 'PUSHPULL')
             df = pd.read_csv(log)
-            df = pd.DataFrame()
+            #df = pd.DataFrame()
 
             log1 = '../../output/%d/%d_sim_out_normal_%d_%s.csv' % (j, num, j, 'PUSHSUM')
             df1 = pd.read_csv(log1)

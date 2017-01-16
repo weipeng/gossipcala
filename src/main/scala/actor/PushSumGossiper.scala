@@ -25,10 +25,10 @@ class PushSumGossiper(override val name: String,
     case PushSumMessage(value) =>
       val newMailbox = sumState.mailBox :+ value
       if (sender == self) {
-        val newState = if (newMailbox.size > 1) {
-                         update(gossiper, newMailbox).compareData()
-                       }
-                       else gossiper.copy(data = value).compareData()
+        val newState = 
+          if (newMailbox.size > 1) update(gossiper, newMailbox).compareData()
+          else gossiper.copy(data = value, 
+                             wastedRoundCount = gossiper.wastedRoundCount + 1).compareData()
 
         if (newState.toStop()) {
           self ! StopMessage
@@ -66,7 +66,7 @@ class PushSumGossiper(override val name: String,
     val newData = sum(mailbox)
     val isWasted = gossiper.isWasted(newData(1) / newData(0))
     val wasteQuantity = if (isWasted) 1 else 0
-    if (isWasted) logger.warn(s"${name}+++${gossiper.roundCount}")
+    //if (isWasted) logger.warn(s"${name}+++${gossiper.roundCount}")
     gossiper.copy(data = newData, 
                   wastedRoundCount = gossiper.wastedRoundCount + wasteQuantity)
   }

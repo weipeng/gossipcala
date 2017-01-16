@@ -11,10 +11,10 @@
         </encoder>
     </appender>
 
-    <logger name="simulation" level="trace" />
-    <logger name="gossiper" level="trace" />
-    <logger name="actor" level="trace" />
-    <logger name="report" level="trace" />
+    <logger name="simulation" level="off" />
+    <logger name="gossiper" level="off" />
+    <logger name="actor" level="off" />
+    <logger name="report" level="off" />
 
     <root level="DEBUG">
         <appender-ref ref="STDOUT" />
