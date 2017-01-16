@@ -34,10 +34,11 @@ case class SingleMeanGossiper private(override val name: String,
     }
   }
 
+  /*
+  Not really useful 
+  */
   override def update(value: Double): SingleMeanGossiper = {
-    data(1) = (data(1) + value) / 2.0
-    val wasteQuantity = if (abs(data(1) / value) - 1 <= wastedRoundThreshold) 1 else 0
-    copy(wastedRoundCount = wastedRoundCount + wasteQuantity)
+    copy()
   }
 
   def bumpRound(): SingleMeanGossiper = copy(roundCount = roundCount + 1)
@@ -46,7 +47,7 @@ case class SingleMeanGossiper private(override val name: String,
 
   def bumpBusyMessage(): SingleMeanGossiper = copy(busyMessageCount = busyMessageCount + 1)
 
-  def isWasted(value: Double): Boolean = abs(value - estimate) <= wastedRoundThreshold * estimate
+  def isWasted(value: Double): Boolean = abs(value / estimate - 1) <= wastedRoundThreshold
   
   def getWasteThreshold(): Double = wastedRoundThreshold
 
