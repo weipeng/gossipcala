@@ -5,7 +5,7 @@ for ds in "normal_10" "normal_100" "normal_1000"
 do 
   for num in 200 400 600 800 1000
   do
-    for type in "weighted" "pushsum" "pushpull"
+    for type in "pushsum" #"weighted" "pushsum" "pushpull"
     do
       if [ $type == "weighted" ]
       then 
