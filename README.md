@@ -4,6 +4,7 @@
 * **Ant**
 * **SBT**
 * **Scala 2.11.8**
+* **Python 2.7**
 
 ## Instruction
 ### Build and Run
@@ -17,7 +18,7 @@ sbt run
 ```
 
 ## Dependency of Python
-Please note that, all the python code in the project is in Python2. Running Python 3 may get bugs.
+Please note that, all the python code in the project is in Python2. Running Python3 may get bugs.
 
 To install all the required python packages, run
 ```
