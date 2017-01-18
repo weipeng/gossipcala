@@ -17,7 +17,7 @@ gtypes = {
 def round2(x):
     return round(x, 2)
 
-def plot(feature, show=False):
+def plot(feature, show=False, estimator=np.median):
     #fig = plt.figure(figsize=(8., 4.9))
     for j in [10, 100, 1000]:
         fig, axes = plt.subplots(1, 5, figsize=(21., 3.9), sharey=True, dpi=1200)
@@ -71,7 +71,7 @@ def plot(feature, show=False):
             if feature != 'Mean waste rate':
                 sns.tsplot(time='graphMeanDegree', value=feature,
                            unit='simCounter', condition='gossipType',
-                           ci=95, data=df, ax=ax, estimator=np.median)
+                           ci=95, data=df, ax=ax, estimator=estimator)
 
                 if feature== 'meanMessages':
                     df['Type'] = df['gossipType'] + ' - effective'
@@ -80,11 +80,12 @@ def plot(feature, show=False):
                                unit='simCounter', condition='Type', 
                                color='orange', ci=95, marker='o',
                                data=df[df['Type'] == 'Push-pull - effective'], 
-                               ax=ax, estimator=np.median)
+                               ax=ax, estimator=estimator)
             else:
                 sns.boxplot(x='graphMeanDegree', y='Mean waste rate', 
-                            hue='gossipType', notch=True, data=df, ax=ax,
-                            whis=[5, 95], meanline=True)
+                            hue='gossipType', notch=False, 
+                            data=df, ax=ax,
+                            whis=[5, 95], meanline=False)
             
                 
             if i == 0: 
@@ -174,7 +175,8 @@ if __name__ == '__main__':
     #for gtype in ['WEIGHTED', 'PUSHSUM', 'PUSHPULL']:
     #    for num in xrange(200, 1001, 200):
     #        plot_sens_analysis(gtype, num)
-    plot('Mean waste rate')
-    plot('meanL1AbsoluteError')
-    plot('meanRounds')
-    plot('meanMessages')
+    #plot('Mean waste rate')
+    plot('meanWastedRounds', np.mean)
+    #plot('meanL1AbsoluteError')
+    #plot('meanRounds')
+    #plot('meanMessages')

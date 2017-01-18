@@ -8,9 +8,9 @@ for j in [10, 100, 1000]:
         log = '../output/%d/%d_sim_out_normal_%d_%s.csv' % (j, num, j, 'PUSHPULL')
         df = pd.read_csv(log)
         dfs.append(df)
-        print df.groupby('graphMeanDegree')['meanBusyMessages'].mean()
+        print df.groupby('graphMeanDegree')['meanWastedRounds'].mean()
         des = df.describe()
-        print j, num, des['meanBusyMessages']
+        print j, num, des['meanWastedRounds']
     #df = dfs[0].append(dfs[1:], ignore_index=True)
 
     #des = df.describe()
