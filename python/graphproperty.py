@@ -18,9 +18,13 @@ def handle(queue, i):
         fout.write('\n')
 
         while True:
-            fn = queue.get()
-            
-            if fn is None: break
+            try:
+                fn = queue.get(True, 0.01)
+            except Queue.Empty:
+                print i, 'stop here'
+                break                
+
+            if 'sw' in fn: continue
 
             print 'Processing', fn
             with gzip.open('../graphs/'+fn) as f:
@@ -62,9 +66,9 @@ def handle(queue, i):
 
 if __name__ == '__main__':
     queue = Queue()
-    map(queue.put, os.listdir('../graphs'))
+    map(queue.put, [f for f in os.listdir('../graphs') if '800_45' in f])
     
-    procs = [Process(target=handle, args=(queue, i)) for i in xrange(8)]
+    procs = [Process(target=handle, args=(queue, i)) for i in xrange(8, 16)]
     for proc in procs:
         proc.start()
     
