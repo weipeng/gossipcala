@@ -4,7 +4,8 @@ import networkx as nx
 import numpy as np
 import simplejson as json
 from networkx.readwrite import json_graph
-from multiprocessing import *
+import Queue
+import multiprocessing as mp
 
 
 def handle(queue, i):
@@ -65,10 +66,10 @@ def handle(queue, i):
             fout.write('\t'.join(map(str, row)) + '\n')
 
 if __name__ == '__main__':
-    queue = Queue()
-    map(queue.put, [f for f in os.listdir('../graphs') if '800_45' in f])
+    queue = mp.Queue()
+    map(queue.put, os.listdir('../graphs'))
     
-    procs = [Process(target=handle, args=(queue, i)) for i in xrange(8, 16)]
+    procs = [mp.Process(target=handle, args=(queue, i)) for i in xrange(8)]
     for proc in procs:
         proc.start()
     
