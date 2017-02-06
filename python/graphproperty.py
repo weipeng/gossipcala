@@ -62,7 +62,9 @@ def get_graph_property(fn, i):
         fout.write('\t'.join(map(str, row)) + '\n')
 
 if __name__ == '__main__':
-    n_jobs = 8
+    import sys
+
+    n_jobs = 8 if len(sys.argv) <= 1 else int(sys.argv[1])
     Parallel(n_jobs=n_jobs)(
         delayed(get_graph_property)(fn, i%n_jobs) 
         for i, fn in enumerate(os.listdir('../graphs')))
