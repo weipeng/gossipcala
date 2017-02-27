@@ -8,7 +8,7 @@ from joblib import Parallel, delayed
 
 
 def get_graph_property(fn, i):
-    doc = ['Order', 'Index', 'Mean degree',
+    doc = ['Order', 'Index', 'Mean degree', 'Number of connected components',
            'Variance of degree', 'Min degree', 'Max degree',
            'Radius', 'Diameter', 'Density', 'Connectivity',
            'Mean eccentricity', 'Variance of eccentricity', 'Min eccentricity', 'Max eccentricity',
@@ -24,6 +24,7 @@ def get_graph_property(fn, i):
 
         index = jdata['index']
         del jdata['index']
+        order = jdata['order']
         del jdata['order']
         mean_degree = jdata['mean_degree']
         del jdata['mean_degree']
@@ -52,8 +53,9 @@ def get_graph_property(fn, i):
         max_clust = np.max(clustering.values())
         mean_clust = np.mean(clustering.values())
         var_clust = np.var(clustering.values())
+        num_cc = nx.number_connected_components(G)
 
-        row = [G.order(), index, mean_degree,
+        row = [order, index, mean_degree, num_cc,
                var_degree, min_degree, max_degree,
                radius, diameter, density, connectivity,
                mean_ecc, var_ecc, min_ecc, max_ecc,
