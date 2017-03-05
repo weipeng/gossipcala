@@ -31,6 +31,5 @@ val resolvers = Seq(
 scalacOptions ++= Seq(
   "-feature",
   "-deprecation"
-  //"-Ybackend:o3"
 )
 

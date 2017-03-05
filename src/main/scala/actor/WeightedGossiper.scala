@@ -9,6 +9,7 @@ import scala.Vector
 import scala.concurrent.duration._
 import scala.language.postfixOps
 import com.typesafe.scalalogging.LazyLogging
+import scala.math.abs
 
 
 class WeightedGossiper(override val name: String,
@@ -18,6 +19,7 @@ class WeightedGossiper(override val name: String,
   override def work(neighbors: Map[String, ActorRef],
                     gossiper: SingleMeanGossiper,
                     wState: WeightExtraState): Receive = common(gossiper) orElse {
+
     case InitMessage(nbs) =>
       val neighbors = nbs + (name -> self)
       context become work(neighbors,
@@ -30,8 +32,8 @@ class WeightedGossiper(override val name: String,
       context become work(neighbors, gossip(gossiper, wState), wState)
 
     case WeightedPushMessage(data, roundCount) =>
-      logger.debug(s"$name in ${gossiper.roundCount} receive $data from ${GossiperActorTrait.extractName(sender)} \n ${gossiper.convergenceCount} ${gossiper.estimate} ${gossiper.lastMetric}")
       val mailBoxState = wState.mailbox :+ data
+      logger.debug(s"$name, received ${mailBoxState.size} mails, actual mailbox size: ${neighbors.size}")
       if (sender == self) {
         val newState = update(gossiper, mailBoxState).compareData()
 
@@ -48,7 +50,6 @@ class WeightedGossiper(override val name: String,
         context become work(neighbors, gossiper, 
                             wState.copy(mailbox = mailBoxState))
       }
-
     case StopMessage =>
       context become work(neighbors, gossiper.wrap(), wState)
   }
@@ -58,7 +59,6 @@ class WeightedGossiper(override val name: String,
     val diffuseMat = wState.diffuseMatrix
     for ((x, v) <- diffuseMat) { 
       if (x != self) {
-        logger.debug(s"$name sends to $x")
         x ! WeightedPushMessage(gossiper.data * v, gossiper.roundCount)
       }
     }
@@ -72,15 +72,15 @@ class WeightedGossiper(override val name: String,
     val data = sum(mailbox)
     val isWasted = gossiper.isWasted(data(1) / data(0))
     val wasteQuantity = if (isWasted) 1 else 0
-    if (isWasted) logger.warn(s"${name}+++${gossiper.roundCount}")
     gossiper.copy(data = data,
                   wastedRoundCount = gossiper.wastedRoundCount + wasteQuantity)
   }
 
   override val defaultExtraState = WeightExtraState(Map.empty, Vector.empty)
-  override val waitTime: FiniteDuration = 50 millis
+  override val waitTime: FiniteDuration = 2500 millis
 }
 
 object WeightedGossiper {
-  def props(name: String, gossiper: SingleMeanGossiper) = Props(new WeightedGossiper(name, gossiper))
+  def props(name: String, gossiper: SingleMeanGossiper) = 
+    Props(new WeightedGossiper(name, gossiper))
 }

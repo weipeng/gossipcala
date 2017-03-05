@@ -102,10 +102,11 @@ object Simulation extends LazyLogging {
     val dataFileName = simulation.dataSource
     val data = dataReader.read(s"${dataFileName}_$numNodes.csv.gz")
 
+    println(s"Data mean: ${mean(data)}")
     val gt = simulation.gossipType
     val params = for {
-      param <- 10 to 50 by 5
-      graphIndex <- 0 until 5
+      param <- 25 to 50 by 5
+      graphIndex <- 0  until 5
     } yield (param, graphIndex)
 
     val f = params.foldLeft(Future.successful[Unit](Unit)) { (f, param) => 

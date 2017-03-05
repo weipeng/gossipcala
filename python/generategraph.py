@@ -2,7 +2,7 @@ import gzip
 import networkx as nx
 import numpy as np
 from networkx.readwrite import json_graph
-from ujson import dumps
+from simplejson import dumps
 
 for graph_type in ['sf', 'sw']:
     for num_nodes in xrange(10000, 10001, 200):
@@ -10,8 +10,8 @@ for graph_type in ['sf', 'sw']:
             for p in xrange(5, 51, 5):
                 for i in xrange(5):
                     while True:
-                        #G = nx.barabasi_albert_graph(num_nodes, p)
-                        G = nx.watts_strogatz_graph(num_nodes, 30, 0.4)
+                        G = nx.barabasi_albert_graph(num_nodes, p)
+                        #G = nx.watts_strogatz_graph(num_nodes, 30, 0.4)
                         if nx.is_connected(G):# and np.min(G.degree().values()) <= 5:
                             break
                         print np.min(G.degree().values())
