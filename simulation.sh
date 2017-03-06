@@ -1,7 +1,7 @@
 rm /tmp/gossipcala.log
 #mkdir -p ./output/logs
 
-for ds in "normal_100" "normal_1000" 
+for ds in "normal_100" 
 do 
   for num in 10000
   do

@@ -32,7 +32,7 @@ case class ResultAnalyser(dataMean: Double,
       messages(i) = n.messageCount
       busyMessages(i) = n.busyMessageCount
       errors(i) = n.estimate / dataMean - 1
-      logger.warn(s"${n.nodeName}===${n.roundCount}")
+      //logger.warn(s"${n.nodeName}===${n.roundCount}")
     }
     val effectiveRounds = rounds - wastedRounds
 

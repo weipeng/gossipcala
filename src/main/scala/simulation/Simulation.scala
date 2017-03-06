@@ -24,7 +24,7 @@ import scala.math.abs
 
 object Simulation extends LazyLogging {
 
-  implicit val timeout = Timeout(1 seconds)
+  implicit val timeout = Timeout(3 seconds)
 
   def simWithRepetition(repeatTimes: Int,
                         data: DenseVector[Double],
@@ -52,10 +52,14 @@ object Simulation extends LazyLogging {
       val name = s"node$id" 
       id -> system.actorOf(
         gossipType match {
-          case GossipType.PUSHPULL => PushPullGossiper.props(name, SingleMeanGossiper(name, data(id)))
-          case GossipType.WEIGHTED => WeightedGossiper.props(name, SingleMeanGossiper(name, data(id)))
-          case GossipType.PUSHSUM => PushSumGossiper.props(name, SingleMeanGossiper(name, data(id)))
-          case gt => throw new Exception(s"""Gossip type "${gt.toString}" not supported""")
+          case GossipType.PUSHPULL => 
+            PushPullGossiper.props(name, SingleMeanGossiper(name, data(id)))
+          case GossipType.WEIGHTED => 
+            WeightedGossiper.props(name, SingleMeanGossiper(name, data(id)))
+          case GossipType.PUSHSUM => 
+            PushSumGossiper.props(name, SingleMeanGossiper(name, data(id)))
+          case gt => 
+            throw new Exception(s"""Gossip type "${gt.toString}" not supported""")
         },
         name = n.name
       )
@@ -64,10 +68,12 @@ object Simulation extends LazyLogging {
     graph.nodes foreach { node =>
       members(node.id) ! InitMessage(node.links map (n => n.name -> members(n.id)) toMap)
     }
-
+  
     members.values.foreach { m => m ! StartMessage(None) }
 
-    checkState(members.values.toList)(r => r.nodeName + ": " + abs(r.estimate / dataMean - 1)).flatMap {results =>
+    println("Start attention")
+    val state = checkState(members.values.toList)(r => r.nodeName + ": " + abs(r.estimate / dataMean - 1))
+    state flatMap {results =>
       val simCounter = round + repeatition * graph.index
       val report = ResultAnalyser(dataMean, results, simCounter, gossipType, graph).analyse()
 
@@ -79,17 +85,24 @@ object Simulation extends LazyLogging {
     }
   }
 
-  private def reRun(round: Int, limit: Int, f: Int => Future[Unit]): Future[Unit] = {
-    if (round >= limit) Future.successful(Unit) else f(round).flatMap(_ => reRun(round + 1, limit, f))
+  private def reRun(round: Int, limit: Int, 
+                    f: Int => Future[Unit]): Future[Unit] = {
+    if (round >= limit) 
+      Future.successful(Unit) 
+    else 
+      f(round).flatMap(_ => reRun(round + 1, limit, f))
   }
 
-  private def checkState(nodes: List[ActorRef])(log: NodeState => String): Future[List[NodeState]] = {
+  private def checkState(nodes: List[ActorRef])(log: NodeState => String): 
+    Future[List[NodeState]] = {
+
     Thread.sleep(simulation.checkStateTimeout)
-    val futures = nodes map { m =>
-      (m ? CheckState).mapTo[NodeState]
-    }
+    val futures = nodes map { m => (m ? CheckState).mapTo[NodeState] } 
     Future.sequence(futures) flatMap { results =>
-      results.foreach{r => logger.trace(log(r)); logger.trace(r.toString)}
+      results.foreach{ r => 
+        logger.trace(log(r))
+        logger.trace(r.toString)
+      }
       val completed = results.forall(_.status == GossiperStatus.COMPLETE)
       if (completed) Future.successful(results) else checkState(nodes)(log)
     }
@@ -102,10 +115,9 @@ object Simulation extends LazyLogging {
     val dataFileName = simulation.dataSource
     val data = dataReader.read(s"${dataFileName}_$numNodes.csv.gz")
 
-    println(s"Data mean: ${mean(data)}")
     val gt = simulation.gossipType
     val params = for {
-      param <- 25 to 50 by 5
+      param <- 30 to 50 by 5
       graphIndex <- 0  until 5
     } yield (param, graphIndex)
 

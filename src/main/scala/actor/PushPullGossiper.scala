@@ -17,26 +17,23 @@ class PushPullGossiper(override val name: String,
       context become work(neighbors, gossiper, ppState)
 
     case PushMessage(value) =>
+      logger.debug(s"${this.name} receive push $value from ${GossiperActorTrait.extractName(sender)} and update to ${gossiper.data(1)} ${gossiper.status}")
       if (ppState.busyState) {
         val (msg, state) = makePullMessage(gossiper)
         sender ! msg
         val newState = update(state.bumpRound(), value)
-        log.debug(s"$name receive push $value, reply ${GossiperActorTrait.extractName(sender)} with ${msg.data} and update to ${newState.data(1)}")
         context become work(neighbors, newState, ppState)
       } else {
-        log.debug(s"$name is in BusyState when ${GossiperActorTrait.extractName(sender)} request")
+        logger.debug(s"$name is in BusyState when ${GossiperActorTrait.extractName(sender)} request")
         sender ! BusyState
       }
 
     case PullMessage(value) =>
       val newState = update(gossiper, value).compareData()
-      log.debug(s"$name receive pull $value from ${GossiperActorTrait.extractName(sender)} and update to ${newState.data(1)}")
       context become work(neighbors, newState, ppState.copy(busyState = true))
-      if (newState.toStop()) {
-        self ! StopMessage
-      } else {
-        self ! StartMessage(None)
-      }
+      if (newState.toStop) self ! StopMessage else self ! StartMessage(None)
+
+      logger.debug(s"$name receive pull $value from ${GossiperActorTrait.extractName(sender)} and update to ${newState.data(1)} ${newState.status} ${newState.convergenceCount}")
 
     case BusyState =>
       context become work(neighbors, gossiper, ppState.copy(busyState = true))
@@ -44,8 +41,9 @@ class PushPullGossiper(override val name: String,
       sendSelfWithDelay(StartMessage(Some(nextTarget)))
 
     case StopMessage =>
-      log.debug(s"$name stopped")
-      context become work(neighbors, gossiper.wrap(), ppState)
+      val g = gossiper.wrap()
+      context become work(neighbors, g, ppState)
+      logger.debug(s"$name stopped, status: ${g.status}")
 
     case StartMessage(t) =>
       val target = t.getOrElse(nextNeighbor(neighbors, None))
@@ -58,7 +56,7 @@ class PushPullGossiper(override val name: String,
   private def gossip(target: ActorRef, gossiper: SingleMeanGossiper, isResend: Boolean): SingleMeanGossiper = {
     val (msg, state) = makePushMessage(gossiper)
     target ! msg
-    log.debug(s"$name push ${GossiperActorTrait.extractName(target)} with ${msg.data}")
+    logger.debug(s"[P] $name push to ${GossiperActorTrait.extractName(target)} with ${msg.data}")
     if (isResend) state.bumpBusyMessage()
     else state.bumpRound()
   }
@@ -75,8 +73,9 @@ class PushPullGossiper(override val name: String,
     val data = gossiper.data
     val s = (data(1) + value) * 0.5 
     val wasteQuantity = if (gossiper.isWasted(s)) 1 else 0
-    if (wasteQuantity == 1) logger.warn(s"${name}+++${gossiper.roundCount}")
+    //if (wasteQuantity == 1) logger.warn(s"${name}+++${gossiper.roundCount}")
     data(1) = s
+    logger.debug(s"${gossiper.name} counter:, ${gossiper.convergenceCount}, ${gossiper.lastMetric} ? ${data(1)}")
     gossiper.copy(data = data, 
                   wastedRoundCount = gossiper.wastedRoundCount + wasteQuantity)
   }
