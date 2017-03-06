@@ -73,11 +73,11 @@ class PushPullGossiper(override val name: String,
 
   private def update(gossiper: SingleMeanGossiper, value: Double): SingleMeanGossiper = {
     val data = gossiper.data
-    val s = (data(1) + value) * 0.5 
+    val s = (data(1) + value) * 0.5
     val wasteQuantity = if (gossiper.isWasted(s)) 1 else 0
-    if (wasteQuantity == 1) logger.warn(s"${name}+++${gossiper.roundCount}")
+    if (wasteQuantity == 1) log.debug(s"${name}+++${gossiper.roundCount}")
     data(1) = s
-    gossiper.copy(data = data, 
+    gossiper.copy(data = data,
                   wastedRoundCount = gossiper.wastedRoundCount + wasteQuantity)
   }
 }
