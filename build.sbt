@@ -32,6 +32,4 @@ scalacOptions ++= Seq(
   "-feature",
   "-deprecation"
 )
-fork := true
 
-javaOptions ++= Seq("-Xms512M", "-Xmx3536M", "-Xss1M")

@@ -18,7 +18,7 @@ do
         i=3
       fi
       echo $type $i
-      sbt run "-Dalgorithm.stopping-threshold=$i \
+      sbt -J-Xms512M -J-Xmx3536M -J-Xss1M run "-Dalgorithm.stopping-threshold=$i \
                -Dsimulation.gossip-type=$type \
                -Dsimulation.num-nodes=$num \
                -Dsimulation.data-source=$ds"
