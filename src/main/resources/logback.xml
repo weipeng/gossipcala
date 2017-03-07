@@ -11,7 +11,7 @@
         </encoder>
     </appender>
 
-    <logger name="simulation" level="off" />
+    <logger name="simulation" level="trace" />
     <logger name="gossiper" level="off" />
     <logger name="actor" level="off" />
     <logger name="report" level="off" />
