@@ -40,7 +40,7 @@ object Simulation extends LazyLogging {
                   gossipType: GossipType.Value,
                   repeatition: Int,
                   round: Int): Future[Unit] = {
-    
+
     logger.info(s"Starting round $round")
     val dataMean = mean(data)
     val numNodes = graph.order
@@ -49,16 +49,16 @@ object Simulation extends LazyLogging {
     val system = ActorSystem(s"Gossip-$round")
     val members = graph.nodes map { n =>
       val id = n.id
-      val name = s"node$id" 
+      val name = s"node$id"
       id -> system.actorOf(
         gossipType match {
-          case GossipType.PUSHPULL => 
+          case GossipType.PUSHPULL =>
             PushPullGossiper.props(name, SingleMeanGossiper(name, data(id)))
-          case GossipType.WEIGHTED => 
+          case GossipType.WEIGHTED =>
             WeightedGossiper.props(name, SingleMeanGossiper(name, data(id)))
-          case GossipType.PUSHSUM => 
+          case GossipType.PUSHSUM =>
             PushSumGossiper.props(name, SingleMeanGossiper(name, data(id)))
-          case gt => 
+          case gt =>
             throw new Exception(s"""Gossip type "${gt.toString}" not supported""")
         },
         name = n.name
@@ -68,12 +68,12 @@ object Simulation extends LazyLogging {
     graph.nodes foreach { node =>
       members(node.id) ! InitMessage(node.links map (n => n.name -> members(n.id)) toMap)
     }
-  
+
     members.values.foreach { m => m ! StartMessage(None) }
 
     println("Start attention")
     val state = checkState(members.values.toList)(r => r.nodeName + ": " + abs(r.estimate / dataMean - 1))
-    state flatMap {results =>
+    state flatMap { results =>
       val simCounter = round + repeatition * graph.index
       val report = ResultAnalyser(dataMean, results, simCounter, gossipType, graph).analyse()
 
@@ -85,43 +85,45 @@ object Simulation extends LazyLogging {
     }
   }
 
-  private def reRun(round: Int, limit: Int, 
+  private def reRun(round: Int, limit: Int,
                     f: Int => Future[Unit]): Future[Unit] = {
-    if (round >= limit) 
-      Future.successful(Unit) 
-    else 
+    if (round >= limit)
+      Future.successful(Unit)
+    else
       f(round).flatMap(_ => reRun(round + 1, limit, f))
   }
 
-  private def checkState(nodes: List[ActorRef])(log: NodeState => String): 
-    Future[List[NodeState]] = {
+  private def checkState(nodes: List[ActorRef])(log: NodeState => String): Future[List[NodeState]] = {
 
     Thread.sleep(simulation.checkStateTimeout)
-    val futures = nodes map { m => (m ? CheckState).mapTo[NodeState] } 
+    val futures = nodes map { m => (m ? CheckState).mapTo[NodeState] }
     Future.sequence(futures) flatMap { results =>
-      results.foreach{ r => 
+      results foreach { r =>
         logger.trace(log(r))
         logger.trace(r.toString)
       }
       val completed = results.forall(_.status == GossiperStatus.COMPLETE)
       if (completed) Future.successful(results) else checkState(nodes)(log)
+    } recoverWith[List[NodeState]] { case ex =>
+      logger.trace(ex.getMessage)
+      checkState(nodes)(log)
     }
   }
 
   def batchSim(): Unit = {
     val repeatedTimes = 35
     val numNodes = simulation.numNodes
-    val dataReader = new DataReader() 
+    val dataReader = new DataReader()
     val dataFileName = simulation.dataSource
     val data = dataReader.read(s"${dataFileName}_$numNodes.csv.gz")
 
     val gt = simulation.gossipType
     val params = for {
       param <- 30 to 50 by 5
-      graphIndex <- 0  until 5
+      graphIndex <- 0 until 5
     } yield (param, graphIndex)
 
-    val f = params.foldLeft(Future.successful[Unit](Unit)) { (f, param) => 
+    val f = params.foldLeft(Future.successful[Unit](Unit)) { (f, param) =>
       f.flatMap { _ =>
         val p = param._1
         val graphIndex = param._2
