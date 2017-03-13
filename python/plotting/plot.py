@@ -128,13 +128,13 @@ def plot_5000(feature, show=False, estimator=np.median):
 def plot(feature, show=False, estimator=np.median):
     #fig = plt.figure(figsize=(8., 4.9))
     for j in [10, 100, 1000]:
-        fig, axes = plt.subplots(1, 6, figsize=(21., 3.7), sharey=True, dpi=1200)
-        for i, num in enumerate(range(200, 1001, 200)+[5000]):
+        fig, axes = plt.subplots(1, 7, figsize=(21., 3.7), sharey=True, dpi=1200)
+        for i, num in enumerate(range(200, 1001, 200)+[5000, 10000]):
             print j, num
             ax = axes[i]
             ax.locator_params(nbins=6, axis='x')
             log = '../../output/%d/%d_sim_out_normal_%d_%s.csv' % (j, num, j, 'PUSHPULL')
-            if num != 5000:
+            if num not in [5000, 10000]:
                 log_ = '../../output/%d_sim_out_normal_%d_%s.csv' % (num, j, 'PUSHPULL')
                 df = pd.read_csv(log).append(pd.read_csv(log_),
                                              ignore_index=True)
@@ -142,7 +142,7 @@ def plot(feature, show=False, estimator=np.median):
                 df = pd.read_csv(log)
 
             log1 = '../../output/%d/%d_sim_out_normal_%d_%s.csv' % (j, num, j, 'PUSHSUM')
-            if num != 5000:
+            if num not in [5000, 10000]:
                 log1_ = '../../output/%d_sim_out_normal_%d_%s.csv' % (num, j, 'PUSHSUM')
                 df1 = pd.read_csv(log1).append(pd.read_csv(log1_),
                                                ignore_index=True)
@@ -150,7 +150,7 @@ def plot(feature, show=False, estimator=np.median):
                 df1 = pd.read_csv(log1)
 
             log2 = '../../output/%d/%d_sim_out_normal_%d_%s.csv' % (j, num, j, 'WEIGHTED')
-            if num != 5000:
+            if num not in [5000, 10000]:
                 log2_ = '../../output/%d_sim_out_normal_%d_%s.csv' % (num, j, 'WEIGHTED')
                 df2 = pd.read_csv(log2).append(pd.read_csv(log2_),
                                                ignore_index=True)
@@ -196,7 +196,7 @@ def plot(feature, show=False, estimator=np.median):
                                unit='simCounter', condition='gossipType',
                                ci=95, data=df[df['gossipType'] == gt],
                                linestyle=ls[gt], ax=ax, estimator=estimator,
-                               color=colors[gt], alpha=.7)
+                               color=colors[gt], alpha=.95)
 
                 if feature== 'meanMessages':
                     df['Type'] = df['gossipType'] + ' - effective'
@@ -205,7 +205,7 @@ def plot(feature, show=False, estimator=np.median):
                                unit='simCounter', condition='Type',
                                color='orange', ci=95, marker='o',
                                data=df[df['Type'] == 'PPG - effective'],
-                               ax=ax, estimator=estimator, alpha=.7)
+                               ax=ax, estimator=estimator, alpha=.95)
             else:
                 sns.boxplot(x='graphMeanDegree', y='Mean waste rate',
                             hue='gossipType', notch=False,
@@ -222,7 +222,9 @@ def plot(feature, show=False, estimator=np.median):
             ax.legend_.remove()
             ax.set_xlabel('Mean degree', fontsize=17)
             ax.set_title(r'$G(%d)$' % num, size=17)
-            ax.set_rasterization_zorder(-10)
+            ax.set_rasterization_zorder(-100)
+            ax.ticklabel_format(style='sci', axis='y', 
+                                scilimits=(0,0), useOffset=False)
 
 
         loc = (.776, .917) if feature != 'meanMessages' else (.656, .917)
@@ -232,23 +234,23 @@ def plot(feature, show=False, estimator=np.median):
         #plt.tight_layout()
         #plt.subplots_adjust(hspace=1.)
         f_str = '-'.join(feature.split(' '))
-        plt.savefig('./figures/%d-%s-mean.pdf' % (j, f_str), dpi=1200)
+        plt.savefig('./figures/%d-%s.pdf' % (j, f_str), dpi=1200)
 
     plt.close('all')
 
 def plot_sep(feature, show=False, estimator=np.median):
     plt.style.use('ggplot')
     sns.set_palette(sns.color_palette(flatui, 7))
-    print feature
+    print (feature)
     for j in [10, 100, 1000]:
         for GT, gt in gtypes.iteritems():
-            fig, axes = plt.subplots(1, 6, figsize=(21., 3.7), sharey=True, dpi=1200)
-            for i, num in enumerate(range(200, 1001, 200)+[5000]):
-                print j, num
+            fig, axes = plt.subplots(1, 7, figsize=(21., 3.3), sharey=True, dpi=1200)
+            for i, num in enumerate(range(200, 1001, 200)+[5000, 10000]):
+                print j, num, gt
                 ax = axes[i]
                 ax.locator_params(nbins=6, axis='x')
                 log = '../../output/%d/%d_sim_out_normal_%d_%s.csv' % (j, num, j, GT)
-                if num != 5000:
+                if num not in [5000, 10000]:
                     log_ = '../../output/%d_sim_out_normal_%d_%s.csv' % (num, j, GT)
                     df = pd.read_csv(log).append(pd.read_csv(log_),
                                                  ignore_index=True)
@@ -290,7 +292,7 @@ def plot_sep(feature, show=False, estimator=np.median):
                     #    df[feature] = df[feature] - df['meanBusyMessages']
                     sns.tsplot(time='graphMeanDegree', value=feature,
                                unit='simCounter', condition='graphIndex',
-                               ci=95, data=df, alpha=0.9, 
+                               ci=95, data=df, alpha=.85, 
                                interpolate=True,
                                ax=ax, estimator=estimator)
 
@@ -313,7 +315,7 @@ def plot_sep(feature, show=False, estimator=np.median):
                 else:
                     ax.set_ylabel('')
 
-                if i != 5:
+                if i != 6:
                     #handles, labels = ax.get_legend_handles_labels()
                     ax.legend_.remove()
                 else:
@@ -400,12 +402,13 @@ if __name__ == '__main__':
     #for gtype in ['WEIGHTED', 'PUSHSUM', 'PUSHPULL']:
     #    for num in xrange(200, 1001, 200):
     #        plot_sens_analysis(gtype, num)
-    #plot('meanL1AbsoluteError', np.mean)
-    #plot('meanRounds', np.mean)
-    #plot('meanMessages', np.mean)
-    plot_sep('meanL1AbsoluteError', np.mean)
-    plot_sep('meanRounds', np.mean)
-    plot_sep('meanMessages', np.mean)
+    plot('meanL1AbsoluteError', np.mean)
+    plot('meanRounds', np.mean)
+    plot('meanMessages', np.mean)
+    plot('meanWastedRounds', np.mean)
+    #plot_sep('meanL1AbsoluteError', np.mean)
+    #plot_sep('meanRounds', np.mean)
+    #plot_sep('meanMessages', np.mean)
     #plot_sep('meanWastedRounds', np.mean)
     #plot('Mean waste rate')
     #plot_5000('meanWastedRounds', np.mean)

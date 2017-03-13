@@ -24,7 +24,7 @@ import scala.math.abs
 
 object Simulation extends LazyLogging {
 
-  implicit val timeout = Timeout(3 seconds)
+  implicit val timeout = Timeout(2 seconds)
 
   def simWithRepetition(repeatTimes: Int,
                         data: DenseVector[Double],
@@ -71,7 +71,6 @@ object Simulation extends LazyLogging {
 
     members.values.foreach { m => m ! StartMessage(None) }
 
-    println("Start attention")
     val state = checkState(members.values.toList)(r => r.nodeName + ": " + abs(r.estimate / dataMean - 1))
     state flatMap { results =>
       val simCounter = round + repeatition * graph.index
@@ -93,10 +92,11 @@ object Simulation extends LazyLogging {
       f(round).flatMap(_ => reRun(round + 1, limit, f))
   }
 
-  private def checkState(nodes: List[ActorRef])(log: NodeState => String): Future[List[NodeState]] = {
-
+  private def checkState(nodes: List[ActorRef])(log: NodeState => String): 
+    Future[List[NodeState]] = {
     Thread.sleep(simulation.checkStateTimeout)
-    val futures = nodes map { m => (m ? CheckState).mapTo[NodeState] }
+
+    val futures = nodes map { m => (m ? CheckState).mapTo[NodeState] } 
     Future.sequence(futures) flatMap { results =>
       results foreach { r =>
         logger.trace(log(r))
@@ -119,7 +119,7 @@ object Simulation extends LazyLogging {
 
     val gt = simulation.gossipType
     val params = for {
-      param <- 30 to 50 by 5
+      param <- 35 to 35 by 5
       graphIndex <- 0 until 5
     } yield (param, graphIndex)
 

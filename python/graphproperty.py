@@ -17,6 +17,7 @@ def get_graph_property(fn, i):
     with open('graphproperties_%d.csv' % i, 'ab') as fout:
         fout.write('\t'.join(doc)+'\n')
         if 'sw' in fn: return
+        if '10000' not in fn: return 
 
         print 'Processing', fn
         with gzip.open('../graphs/'+fn) as f:
@@ -66,7 +67,7 @@ def get_graph_property(fn, i):
 if __name__ == '__main__':
     import sys
 
-    n_jobs = 8 if len(sys.argv) <= 1 else int(sys.argv[1])
+    n_jobs = 4 if len(sys.argv) <= 1 else int(sys.argv[1])
     Parallel(n_jobs=n_jobs)(
         delayed(get_graph_property)(fn, i%n_jobs) 
         for i, fn in enumerate(os.listdir('../graphs')))
