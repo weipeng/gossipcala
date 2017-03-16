@@ -14,6 +14,7 @@
     <logger name="simulation" level="trace" />
     <logger name="gossiper" level="off" />
     <logger name="actor" level="off" />
+    <logger name="actor.Monitor" level="info" />
     <logger name="report" level="off" />
 
     <root level="DEBUG">

@@ -24,8 +24,10 @@ trait GossiperActorTrait[T, A <: AggregateGossiper, E <: ExtraState] extends Act
     case KillMessage =>
       context.stop(self)
 
-    case CheckState =>
-      sender ! NodeState(name,
+    case check: CheckState =>
+      sender ! NodeState(
+        name,
+        check.checkRound,
         g.status,
         g.roundCount,
         g.wastedRoundCount,

@@ -21,8 +21,13 @@ case class InitMessage(neighbors: Map[String, ActorRef]) extends Message
 case class StartMessage(target: Option[ActorRef]) extends Message
 case object StopMessage extends Message
 
-case object CheckState extends Message
+case object StartMonitor extends Message
+case object InitMonitor extends Message
+case object MonitorCompleted extends Message
+case object MonitorFailed extends Message
+case class CheckState(checkRound: Int) extends Message
 case class NodeState(nodeName: String,
+                     checkRound: Int,
                      status: GossiperStatus.Value,
                      roundCount: Int,
                      wastedRoundCount: Int,
