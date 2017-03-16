@@ -21,14 +21,13 @@ import scala.language.postfixOps
 
 object Simulation extends LazyLogging {
 
-  implicit val timeout = Timeout(10 minutes)
-
   def simWithRepetition(repeatTimes: Int,
                         data: DenseVector[Double],
                         dataFileName: String,
                         graph: Graph,
                         gossipType: GossipType.Value): Future[Any] = {
     assert(data.size == graph.order)
+    implicit val timeout = Timeout(repeatTimes * 10 minutes)
     val name = s"Gossip-$dataFileName"
     val system = ActorSystem(name)
     val monitor = system.actorOf(Monitor.props(data, graph, gossipType, repeatTimes, dataFileName))
