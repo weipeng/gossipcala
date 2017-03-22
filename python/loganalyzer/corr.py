@@ -17,6 +17,20 @@ def round2(x):
     except:
         return x
 
+
+def bs_ci_corr(cols, idxs, rslt, merged_df, func):
+    for mea_k, mea_v in cols.items():
+        for gprop_k, gprop_v in idxs.items():
+            x = merged_df[mea_k].values
+            y = merged_df[gprop_k].values
+            lowhigh = bs.ci((x, y), func, n_samples=1000)
+            lowhigh = tuple(map(round2, lowhigh))
+            rslt.loc[rslt.index == gprop_v, mea_v] = '(%0.2f, %0.2f)' % lowhigh
+
+    return rslt
+
+
+
 cols = {'meanRounds': r'$\mathcal{R}$', 'meanMessages': r'$\mathcal{M}$',
         'meanWastedRounds': r'$\mathcal{W}$', 'Z': r'$\mathcal{I}$'}
 
@@ -38,8 +52,7 @@ dfs = []
 gtype = sys.argv[1] #'WEIGHTED'
 print (gtype)
 for var in [10, 100, 1000]:
-    #for fn in os.listdir('../../output/%d' % var):
-    for num in [200, 400, 600, 800, 1000, 5000, 10000]: 
+    for num in [200, 400, 600, 800, 1000]: #, 5000, 10000]: 
         fn = '%d_sim_out_normal_%d_%s.csv' % (num, var, gtype)
         df = pd.read_csv('../../output/%d/%s' % (var, fn)) 
         dfs.append(df)
@@ -52,8 +65,13 @@ output_df.rename(columns={'graphMeanDegree': 'Mean degree',
                           'graphIndex': 'Index',
                           'graphOrder': 'Order'}, inplace=True)
 
-output_df['X'] = output_df['meanL1AbsoluteError'].apply(lambda x: 1 if x>0.0001 else 0)
-z_df = pd.DataFrame({'Z': output_df.groupby(['Order', 'Index', 'Mean degree'])['X'].sum()}).reset_index()
+output_df['X'] = output_df['meanL1AbsoluteError'].apply(
+                    lambda x: 1 if x>0.0001 else 0)
+
+z_df = pd.DataFrame({
+            'Z': output_df.groupby(['Order', 'Index', 
+                                    'Mean degree'])['X'].sum()
+        }).reset_index()
 
 
 graph_df = pd.read_csv('../../python/g_prop.csv')
@@ -70,7 +88,6 @@ gprops = ['Density', 'Mean degree', 'Min degree',
           'Mean clustering', 'Min clustering',
           'Max clustering', 'Variance of clustering'] 
 
-#print merged_df.corr()['meanRounds']
 rslts = []
 rslt = merged_df.corr('spearman')[meas]
 
@@ -80,17 +97,10 @@ rslt = rslt[rslt.index.isin(gprops)]
 rslt.rename(index=idxs, columns=cols, inplace=True)
 rslt.to_csv('%s_spe.csv' % gtype)
 
-for mea_k, mea_v in cols.items():
-    for gprop_k, gprop_v in idxs.items():
-        x = merged_df[mea_k].values
-        y = merged_df[gprop_k].values
-        lowhigh = bs.ci((x, y), sp, n_samples=1000)
-        lowhigh = tuple(map(round2, lowhigh))
-        #print '(%0.2f, %0.2f)' % (lowhigh[0], lowhigh[1])
-        rslt.loc[rslt.index == gprop_v, mea_v] = '(%0.2f, %0.2f)' % lowhigh
+#rslt = bs_ci_corr(cols, idxs, rslt, merged_df, sp)
+#rslt.to_csv('%s_spe-ci.csv' % gtype)
 
-rslt.to_csv('%s_spe-ci.csv' % gtype)
-
+print (rslt)
 print ('Finished processing spearman')
 
 rslt = merged_df.corr('pearson')[meas]
@@ -100,16 +110,7 @@ rslt = rslt[rslt.index.isin(gprops)]
 
 rslt.rename(index=idxs, columns=cols, inplace=True)
 rslt.to_csv('%s_pea.csv' % gtype)
-
-for mea_k, mea_v in cols.items():
-    for gprop_k, gprop_v in idxs.items():
-        x = merged_df[mea_k].values
-        y = merged_df[gprop_k].values
-        lowhigh = bs.ci((x, y), ps, n_samples=1000)
-        lowhigh = tuple(map(round2, lowhigh))
-        #print '(%0.2f, %0.2f)' % (lowhigh[0], lowhigh[1])
-        rslt.loc[rslt.index == gprop_v, mea_v] = '(%0.2f, %0.2f)' % lowhigh
-
-rslt.to_csv('%s_pea-ci.csv' % gtype)
+#rslt = bs_ci_corr(cols, idxs, rslt, merged_df, ps)
+#rslt.to_csv('%s_pea-ci.csv' % gtype)
 print ('Finished processing pearman')
 
