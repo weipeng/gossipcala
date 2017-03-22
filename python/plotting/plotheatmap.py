@@ -6,16 +6,17 @@ import pandas as pd
 plt.rc('text', usetex=True)
 corrs = ['Corr type = Pearson', 'Corr type = Spearman']
 
-for gtype in ['PUSHSUM', 'WEIGHTED']:
+for gtype in ['PUSHSUM', 'WEIGHTED', 'PUSHPULL']:
     fig, axes = plt.subplots(1, 2, sharey=True, figsize=(5., 5.)) 
 
     df1 = pd.read_csv('covs/%s_pea.csv' % gtype, index_col=0)
     df2 = pd.read_csv('covs/%s_spe.csv' % gtype, index_col=0)
 
     cbar_ax = fig.add_axes([.894, .3, .03, .4])
-    sns.heatmap(df1, ax=axes[0], cbar=False, linewidth=1, vmin=-1, vmax=1)
-    sns.heatmap(df2, ax=axes[1], linewidth=1, 
-                cbar_ax=cbar_ax, vmin=-1, vmax=1)
+    sns.heatmap(df1, ax=axes[0], cbar=False, linewidth=1,   
+                vmin=-1, vmax=1, annot=True, annot_kws={"size": 8})
+    sns.heatmap(df2, ax=axes[1], linewidth=1, cbar_ax=cbar_ax, 
+                vmin=-1, vmax=1, annot=True, annot_kws={"size": 8})
 
     for i, corr in enumerate(corrs):
         axes[i].set_title(corr, fontweight='bold')   
