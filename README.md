@@ -22,7 +22,7 @@ Please note that, all the python code in the project is in Python2. Running Pyth
 
 To install all the required python packages, run
 ```
-pip install ujson numpy scipy scikit-learn networkx matplotlib pandas seaborn joblib simplejson scikits.bootstrap
+pip install numpy scipy scikit-learn networkx matplotlib pandas seaborn joblib simplejson scikits.bootstrap
 ```
 
 
