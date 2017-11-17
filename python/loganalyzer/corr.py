@@ -52,7 +52,7 @@ dfs = []
 gtype = sys.argv[1] #'WEIGHTED'
 print (gtype)
 for var in [10, 100, 1000]:
-    for num in [200, 400, 600, 800, 1000]: #, 5000, 10000]: 
+    for num in [200, 400, 600, 800, 1000, 5000, 10000]: 
         fn = '%d_sim_out_normal_%d_%s.csv' % (num, var, gtype)
         df = pd.read_csv('../../output/%d/%s' % (var, fn)) 
         dfs.append(df)
@@ -97,8 +97,8 @@ rslt = rslt[rslt.index.isin(gprops)]
 rslt.rename(index=idxs, columns=cols, inplace=True)
 rslt.to_csv('%s_spe.csv' % gtype)
 
-#rslt = bs_ci_corr(cols, idxs, rslt, merged_df, sp)
-#rslt.to_csv('%s_spe-ci.csv' % gtype)
+rslt = bs_ci_corr(cols, idxs, rslt, merged_df, sp)
+rslt.to_csv('%s_spe-ci.csv' % gtype)
 
 print (rslt)
 print ('Finished processing spearman')
@@ -110,7 +110,8 @@ rslt = rslt[rslt.index.isin(gprops)]
 
 rslt.rename(index=idxs, columns=cols, inplace=True)
 rslt.to_csv('%s_pea.csv' % gtype)
-#rslt = bs_ci_corr(cols, idxs, rslt, merged_df, ps)
-#rslt.to_csv('%s_pea-ci.csv' % gtype)
+rslt = bs_ci_corr(cols, idxs, rslt, merged_df, ps)
+print (rslt)
+rslt.to_csv('%s_pea-ci.csv' % gtype)
 print ('Finished processing pearman')
 
