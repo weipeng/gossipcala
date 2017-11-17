@@ -2,7 +2,7 @@ import gzip
 import networkx as nx
 import numpy as np
 from networkx.readwrite import json_graph
-from simplejson import dumps
+from simplejson import dump
 
 for graph_type in ['sf', 'sw']:
     for num_nodes in xrange(10000, 10001, 200):
@@ -29,9 +29,8 @@ for graph_type in ['sf', 'sw']:
                     #        shared_nbs_count.append(sum(1 for _ in nx.common_neighbors(G, node_i, node_j)))                         
                     data['meanSharedNeighbors'] = 0 #np.mean(shared_nbs_count)
 
-                    jdata = dumps(data)
-                    with gzip.open('../graphs/sf_%d_%d_%d.data.gz'% (num_nodes, p, i), 'wb') as f:
-                        f.write(jdata)
+                    with gzip.open('../graphs/sf_%d_%d_%d.data.gz'% (num_nodes, p, i), 'w') as f:
+                        dump(data, f)
         continue
         if graph_type == 'sw':
             for p in xrange(20, 101, 10):
@@ -53,6 +52,5 @@ for graph_type in ['sf', 'sw']:
                             shared_nbs_count.append(sum(1 for _ in nx.common_neighbors(G, node_i, node_j)))                         
                     data['meanSharedNeighbors'] = np.mean(shared_nbs_count)
 
-                    jdata = dumps(data)
-                    with gzip.open('../graphs/sw_%d_%d_%d.data.gz'% (num_nodes, p, i), 'wb') as f:
-                        f.write(jdata)
+                    with gzip.open('../graphs/sw_%d_%d_%d.data.gz'% (num_nodes, p, i), 'w') as f:
+                        dump(jdata, f)
