@@ -14,7 +14,7 @@ And later, he just turned to some other completely different topics and got lock
 Feel free to use the code. 
 
 ## Contributor
-The repo onwer would like to stress that the implementation is also contributed by @[wuliaososhunhun](https://github.com/wuliaososhunhun). 
+The repo onwer would like to emphasize that the implementation is also contributed by @[wuliaososhunhun](https://github.com/wuliaososhunhun). 
 He has contributed to the codebase at least as much as I have (or probably even more than I have).
 He should be given the credit. 
 
