@@ -8,8 +8,8 @@ One instance could be to ask the average temperature for the bunch of sensors in
 
 Please check out the enoumous number of papers if you are unfamiliar with any of them. 
 
-The repository owner tried to write a paper with regard to the evaluation and the comparison of these three algorithms on three random graphs: random, scale-free, and small-world.
-However, due to his bad writing skills and the lack of interest to the community, that paper did not work out.
+The repository owner tried to write a paper evaluating and comparing several accuracy and runtime efficiency of these three algorithms on three random graphs: random, scale-free, and small-world.
+However, due to his bad writing skills and the lack of interest to the community (incremental contribution), that paper did not work out.
 And later, he just turned to some other completely different topics and got locked in. 
 If you find this is at least of some interest to you, just take it. 
 
