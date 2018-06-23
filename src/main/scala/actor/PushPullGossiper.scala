@@ -73,7 +73,7 @@ class PushPullGossiper(override val name: String,
     val data = gossiper.data
     val s = (data(1) + value) * 0.5
     val wasteQuantity = if (gossiper.isWasted(s)) 1 else 0
-    //if (wasteQuantity == 1) log.warn(s"${name}+++${gossiper.roundCount}")
+    
     data(1) = s
     log.debug(s"${gossiper.name} counter:, ${gossiper.convergenceCount}, ${gossiper.lastMetric} ? ${data(1)}")
     gossiper.copy(data = data,
