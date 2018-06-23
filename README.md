@@ -1,14 +1,23 @@
 # Gossip-based Distributed Averaging Algorithms
 This repo was created for comparing three standard gossip solutions in the distributed mean problem. 
+The question in this problem is simply that: what is the mean of some variables which are shared by a number of devices in the network?
+One instance could be to ask the average temperature for the bunch of sensors in a wireless network. 
+- Random Gossip 
+- Push-sum Gossip
+- Weighted Gossip 
+Please check out the enoumous number of papers if you are unfamiliar with any of them. 
+
 The repository host tried to write an paper with regard to the evaluation and the comparison of these three algorithms on three random graphs: random, scale-free, and small-world.
-However, due to my bad writing skills and the lack of interest to the community, that paper did not work out.
-And, I just turned to some other completely different topics. 
+However, due to his bad writing skills and the lack of interest to the community, that paper did not work out.
+And later, he just turned to some other completely different topics and got locked in. 
+If you find this is at least of some interest to you, just take it. 
 
-Anyone who finds that this has at least a little value, just takes it. 
-
+## Contributor
 I would like to stress that the code is also contributed by @wuliaososhunhun https://github.com/wuliaososhunhun. 
-He has contributed to the code as least as much as I have (or probably even more than I have).
+He has contributed to the code at least as much as I have (or probably even more than I have).
+He should be given the credit. 
 
+# Running the Code 
 ## Dependencies 
 * **Ant**
 * **SBT**
