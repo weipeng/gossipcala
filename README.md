@@ -2,7 +2,7 @@
 This repo was created for comparing three standard gossip solutions in the distributed mean problem. 
 The question in this problem is simply that: what is the mean of some variables which are shared by a number of devices in the network?
 One instance could be to ask the average temperature for the bunch of sensors in a wireless network. 
-- Random Gossip 
+- Push-pull Gossip 
 - Push-sum Gossip
 - Weighted Gossip 
 
