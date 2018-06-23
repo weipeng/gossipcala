@@ -20,7 +20,7 @@ He should be given the credit.
 
 # Running the Code 
 The main component in this project is the AKKA module in Java/Scala which provides a real parallel computing environment. 
-I am the die-hard fan for the Python language but the GIL prevents it becoming an easy-to-use language for carrying out parallel computing.
+The repo owner is a die-hard fan for the Python language but also realizes that the GIL prevents it becoming an easy-to-use language for carrying out parallel computing.
 ## Dependencies 
 * **Ant**
 * **SBT**
