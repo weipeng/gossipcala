@@ -14,7 +14,7 @@ And later, he just turned to some other completely different topics and got lock
 If you find this is at least of some interest to you, just take it. 
 
 ## Contributor
-I would like to stress that the implementation is also contributed by @wuliaososhunhun https://github.com/wuliaososhunhun. 
+I would like to stress that the implementation is also contributed by @[wuliaososhunhun](https://github.com/wuliaososhunhun). 
 He has contributed to the codebase at least as much as I have (or probably even more than I have).
 He should be given the credit. 
 
