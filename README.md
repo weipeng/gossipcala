@@ -5,6 +5,7 @@ One instance could be to ask the average temperature for the bunch of sensors in
 - Random Gossip 
 - Push-sum Gossip
 - Weighted Gossip 
+
 Please check out the enoumous number of papers if you are unfamiliar with any of them. 
 
 The repository host tried to write an paper with regard to the evaluation and the comparison of these three algorithms on three random graphs: random, scale-free, and small-world.
