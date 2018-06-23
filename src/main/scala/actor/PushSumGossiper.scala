@@ -66,7 +66,7 @@ class PushSumGossiper(override val name: String,
     val newData = sum(mailbox)
     val isWasted = gossiper.isWasted(newData(1) / newData(0))
     val wasteQuantity = if (isWasted) 1 else 0
-    //if (isWasted) logger.warn(s"${name}+++${gossiper.roundCount}")
+
     gossiper.copy(data = newData, 
                   wastedRoundCount = gossiper.wastedRoundCount + wasteQuantity)
   }
