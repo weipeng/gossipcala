@@ -1,4 +1,13 @@
-# README
+# Gossip-based Distributed Averaging Algorithms
+This repo was created for comparing three standard gossip solutions in the distributed mean problem. 
+The repository host tried to write an paper with regard to the evaluation and the comparison of these three algorithms on three random graphs: random, scale-free, and small-world.
+However, due to my bad writing skills and the lack of interest to the community, that paper did not work out.
+And, I just turned to some other completely different topics. 
+
+Anyone who finds that this has at least a little value, just takes it. 
+
+I would like to stress that the code is also contributed by @wuliaososhunhun https://github.com/wuliaososhunhun. 
+He has contributed to the code as least as much as I have (or probably even more than I have).
 
 ## Dependencies 
 * **Ant**
