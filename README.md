@@ -11,16 +11,15 @@ Please check out the enoumous number of papers if you are unfamiliar with any of
 The repository owner tried to write a paper evaluating and comparing several accuracy and runtime efficiency of these three algorithms on three random graphs: random, scale-free, and small-world.
 However, due to his bad writing skills and the lack of interest to the community (incremental contribution), that paper did not work out.
 And later, he just turned to some other completely different topics and got locked in. 
-If you find this is at least of some interest to you, just take it. 
+Feel free to use the code. 
 
 ## Contributor
-I would like to stress that the implementation is also contributed by @[wuliaososhunhun](https://github.com/wuliaososhunhun). 
+The repo onwer would like to stress that the implementation is also contributed by @[wuliaososhunhun](https://github.com/wuliaososhunhun). 
 He has contributed to the codebase at least as much as I have (or probably even more than I have).
 He should be given the credit. 
 
 # Running the Code 
 The main component in this project is the AKKA module in Java/Scala which provides a real parallel computing environment. 
-The repo owner is a die-hard fan for the Python language but also realizes that the GIL prevents it becoming an easy-to-use language for carrying out parallel computing.
 ## Dependencies 
 * **Ant**
 * **SBT**
